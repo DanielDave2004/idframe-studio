@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # IDFrame — React + Python FastAPI + Cloudflare Workers AI
 
 A complete three-service IDFrame project, with an AI photo Studio and printable PDF photo sheets.
@@ -97,3 +98,7 @@ The backend's tests may need `pip install pytest httpx` if not included in your 
 
 ## Windows shortcuts
 After installing dependencies, you can open `scripts/start-frontend.bat`, `scripts/start-backend.bat`, and `scripts/start-worker.bat` in separate terminals or Command Prompt windows. They run the same commands described above.
+=======
+# idframe-studio
+AI-Powered Professional Photo and ID Picture Studio
+>>>>>>> 7ca04da5c6ffd3a0076e60620ec542fe5b93b2dd

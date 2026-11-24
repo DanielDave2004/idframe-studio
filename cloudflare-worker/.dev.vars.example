@@ -1,0 +1,4 @@
+# Copy to .dev.vars for LOCAL development only; never commit .dev.vars.
+RATE_LIMIT_SALT=replace-with-a-random-long-secret
+DEV_SKIP_TURNSTILE=true
+# Public Worker deployments require TURNSTILE_SECRET, set using wrangler secret put.

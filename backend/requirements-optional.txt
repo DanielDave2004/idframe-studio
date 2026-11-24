@@ -1,0 +1,5 @@
+# Optional local face detection and AI-assisted background removal.
+# These run on your backend and do not use a paid API.
+-r requirements.txt
+opencv-python-headless>=4.10,<5
+rembg[cpu]>=2.0.60,<3

@@ -1,0 +1,19 @@
+name = "idframe-photo-ai"
+main = "src/index.js"
+compatibility_date = "2026-11-01"
+
+[ai]
+binding = "AI"
+remote = true
+
+[[durable_objects.bindings]]
+name = "GENERATION_COUNTER"
+class_name = "GenerationCounter"
+
+[[migrations]]
+tag = "v1-sqlite-counters"
+new_sqlite_classes = ["GenerationCounter"]
+
+[vars]
+ALLOWED_ORIGIN = "https://your-idframe-site.pages.dev"
+GLOBAL_DAILY_LIMIT = "12"

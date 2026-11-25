@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # IDFrame — React + Python FastAPI + Cloudflare Workers AI
 
 A complete three-service IDFrame project, with an AI photo Studio and printable PDF photo sheets.
@@ -7,7 +6,7 @@ A complete three-service IDFrame project, with an AI photo Studio and printable 
 
 - `frontend/`: React + Vite + TypeScript, responsive Studio, photo upload, crop, background tools, download and PDF export.
 - `backend/`: Python + FastAPI, file validation, image quality analysis and mild image enhancement. **Python does not generate formal clothing**. Frontend falls back to browser analysis when Python is offline.
-- `cloudflare-worker/`: Cloudflare Workers AI image editing with FLUX.2 Klein 4B and FLUX.2 Dev (availability depends on your Cloudflare account); 5 successful generations per visitor per UTC day, 12 daily attempts, and a studio-wide daily cap using a Durable Object.
+- `cloudflare-worker/`: Cloudflare Workers AI image editing with FLUX.2 Klein 4B and FLUX.2 Dev (availability depends on your Cloudflare account); 10 successful generations per visitor per UTC day, 24 daily attempts, and a studio-wide daily cap of 50 successful generations using a Durable Object.
 
 ## Setup on Windows (three terminals)
 
@@ -98,7 +97,27 @@ The backend's tests may need `pip install pytest httpx` if not included in your 
 
 ## Windows shortcuts
 After installing dependencies, you can open `scripts/start-frontend.bat`, `scripts/start-backend.bat`, and `scripts/start-worker.bat` in separate terminals or Command Prompt windows. They run the same commands described above.
-=======
-# idframe-studio
-AI-Powered Professional Photo and ID Picture Studio
->>>>>>> 7ca04da5c6ffd3a0076e60620ec542fe5b93b2dd
+
+## Daily usage indicator troubleshooting
+
+If the Studio shows **Daily usage unavailable** instead of a count, verify `frontend/.env.local` contains `VITE_CLOUDFLARE_WORKER_URL=http://localhost:8787`, then restart Vite. Check that `ALLOWED_ORIGIN` in the Worker matches the actual browser origin (for example, `http://localhost:5173`). The Studio now logs the underlying request error in DevTools and provides a refresh control instead of staying on `checking…` after an error.
+
+
+## Formal ID Portrait (fixed style, Cloudflare)
+
+This edition fixes the Cloudflare Worker generation prompt to **front-facing, centered, both shoulders square, black business suit, white dress shirt, black necktie, white background**. The old attire and backdrop dropdowns are removed from the Generate panel. The Worker ignores submitted outfit/background values, so the style remains fixed. You can still choose FLUX.2 Klein 4B or Dev, subject to availability on your Cloudflare account.
+
+The React client creates a face-centered **480×480 reference crop** before requesting AI generation to reduce foreground selfie hands and background distractions. For best results, choose a photograph with a clearly visible face; a frontal input is still preferable. Prompting and cropping **cannot guarantee** a front-facing result or exact identity preservation, especially from dramatically angled selfies. These images may not meet official ID photo rules.
+
+Your existing local config still belongs in `frontend/.env.local`:
+
+```env
+VITE_CLOUDFLARE_WORKER_URL=http://localhost:8787
+VITE_PYTHON_API_URL=http://localhost:8000
+```
+
+Keep your existing `cloudflare-worker/.dev.vars` secrets and `frontend/.env.local` when updating. Restart Wrangler and Vite after replacing code. Previously generated portraits may be restored from local browser storage; use **Return to original** before generating again.
+
+## Generation limits (updated)
+
+The Cloudflare Worker permits **10 successful generations per visitor per UTC day** with up to **24 attempts per visitor per day**, and a configurable **50 daily global generations** cap. In `cloudflare-worker/wrangler.toml`, set `GLOBAL_DAILY_LIMIT = "50"`. The limit is separate from Cloudflare Workers AI Neurons. A failed generation normally refunds generation reservations, but still consumes an attempt and may consume Cloudflare Neurons. Local changes require a Wrangler restart; production changes require a Worker redeploy. The frontend reads `/api/usage` and displays the current allowance without a hardcoded count.

@@ -16,4 +16,4 @@ new_sqlite_classes = ["GenerationCounter"]
 
 [vars]
 ALLOWED_ORIGIN = "https://your-idframe-site.pages.dev"
-GLOBAL_DAILY_LIMIT = "12"
+GLOBAL_DAILY_LIMIT = "50"

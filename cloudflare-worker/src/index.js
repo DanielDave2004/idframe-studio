@@ -4,16 +4,20 @@ const MODELS = {
   klein: '@cf/black-forest-labs/flux-2-klein-4b',
 }
 const DEFAULT_MODEL = 'klein'
-const styleDescriptions = {
-  suit: 'a simple tailored dark charcoal business blazer and white collared shirt',
-  'business-casual': 'a neat business casual collared shirt and modest blazer',
-  original: 'the same clothing shown in the reference image, without changing the outfit',
-}
-const backdrops = {
-  white: 'a pure white seamless studio background',
-  gray: 'a light neutral gray seamless studio background',
-  blue: 'a plain pale blue seamless studio background',
-}
+// Strict output style. Client-provided outfit/background values are intentionally ignored.
+const FORMAL_PORTRAIT_PROMPT = `Edit input image 0 into a single photorealistic, front-facing formal studio ID portrait of the SAME person shown in the reference photo.
+
+IDENTITY: Use the uploaded image for the person's face and identity. Keep their recognizable facial features, age, skin tone, face shape, jaw, eyes, nose, mouth, ears, hairline and hairstyle as faithful as possible. Do not beautify, change ethnicity, replace the person or invent different facial features. Preserve natural realistic skin texture.
+
+RECOMPOSE POSE COMPLETELY: The person must be sitting or standing upright, facing directly forward toward the camera. Head straight and level, eyes looking into the lens. Torso squarely facing the camera. Both shoulders level, symmetrical, fully visible, and facing forward. Eliminate selfie perspective, tilted or rotated body, reaching or extended arm, hand close to camera, and any hands or objects in the frame. Do not carry over the original selfie pose or body orientation. Create a standard straight-on formal ID-photo composition.
+
+MANDATORY CLOTHING: A realistic, properly fitted plain BLACK business SUIT JACKET over a crisp WHITE formal dress shirt, with a centered solid BLACK NECKTIE and visible knot. Clearly show jacket lapels, shirt collar, tie, upper chest and both shoulders. No casual shirt, no T-shirt, no open collar, no blazer without a tie.
+
+PORTRAIT FRAMING: One person only. Centered head and upper torso, with modest space above the hair. Head occupies about 40% of the frame height, cropped at approximately mid-chest. Symmetrical 2-by-2-inch ID portrait aesthetic. Solid clean WHITE background, with no objects or scenery. Diffuse even soft frontal studio light without dramatic shadows. Natural neutral professional expression, closed mouth, no exaggerated smiling.
+
+OUTPUT: Realistic high-resolution photographic portrait, straight-on eye-level camera, sharp face, natural proportions. No raised arms, hands, tilted shoulders, selfies, accessories, text, logos, watermarks, frames, illustration, or composite-looking cutouts.
+
+Important: PRIORITIZE the specified black-suit-and-black-tie front-facing ID-photo format over maintaining the reference body's position or clothing. Use the reference for facial identity, not for posing.`
 
 function cors(origin, env) {
   const allowed = origin === 'http://localhost:5173' || origin === 'http://127.0.0.1:5173' || origin === env.ALLOWED_ORIGIN
@@ -46,7 +50,7 @@ export class GenerationCounter {
   }
 }
 
-const VISITOR_LIMIT = 5
+const VISITOR_LIMIT = 10
 const JSON_HEADERS = { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }
 function utcDay() { return new Date().toISOString().slice(0, 10) }
 function nextReset() { const now = new Date(); return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()+1)).toISOString() }
@@ -94,7 +98,7 @@ export default {
     if (!headers['Access-Control-Allow-Origin']) return json('Origin not allowed. Check ALLOWED_ORIGIN.',403,headers)
     if (!env.GENERATION_COUNTER) return json('Counter binding missing. Deploy with the Durable Object configuration.',503,headers)
     if (!env.RATE_LIMIT_SALT) return json('RATE_LIMIT_SALT is not configured. See README.',503,headers)
-    const globalLimit = Math.max(1, Math.min(100, Number(env.GLOBAL_DAILY_LIMIT || 12)))
+    const globalLimit = Math.max(1, Math.min(100, Number(env.GLOBAL_DAILY_LIMIT || 50)))
     let visitorKey
     try { visitorKey = `${utcDay()}:visitor:${await anonVisitor(request,env)}` }
     catch { return json('Rate limiter cannot identify the visitor. Check Worker configuration.',503,headers) }
@@ -116,24 +120,24 @@ export default {
     try {
       const form = await request.formData()
       const photo = form.get('photo')
-      const style = form.get('style')
-      const backdrop = form.get('backdrop')
       const modelChoice = String(form.get('model') || DEFAULT_MODEL)
       if (!(photo instanceof File) || !['image/jpeg','image/png'].includes(photo.type) || photo.size > 1_000_000 || !photo.size) return json('Please upload a JPG or PNG under 1 MB.',400,headers)
-      if (!(style in styleDescriptions) || !(backdrop in backdrops) || !Object.hasOwn(MODELS, modelChoice)) return json('Invalid photo settings or model.',400,headers)
+      if (!Object.hasOwn(MODELS, modelChoice)) return json('Invalid AI model.',400,headers)
       if (!await checkTurnstile(request, env, String(form.get('turnstileToken') || ''))) return json('Human verification required. Complete the Turnstile challenge and retry.',403,headers)
 
       // Count even failed requests as attempts to prevent repeated costly failures.
-      const attempts = await usage(env,`${visitorKey}:attempts`,'reserve',12)
+      const attempts = await usage(env,`${visitorKey}:attempts`,'reserve',24)
       if (!attempts.allowed) return json('Too many generation attempts today. Try again after midnight UTC.',429,headers)
       const global = await usage(env,globalKey,'reserve',globalLimit)
       if (!global.allowed) return json('The studio daily AI budget is exhausted. Manual editing and PDF downloads are still available. Try tomorrow (UTC).',429,headers)
       globalReserved = true
       const personal = await usage(env,visitorKey,'reserve',VISITOR_LIMIT)
-      if (!personal.allowed) return json('Daily limit reached: 5 generations per visitor. You can edit and download existing photos, or return tomorrow (UTC).',429,headers)
+      if (!personal.allowed) return json('Daily limit reached: 10 generations per visitor. You can edit and download existing photos, or return tomorrow (UTC).',429,headers)
       visitorReserved = true
 
-      const prompt = `Edit input image 0 into a realistic head-and-shoulders professional studio photograph of the SAME person. The uploaded photo is the identity reference. Keep the original face, jawline, eyes, nose, lips, ears, skin tone, apparent age, hairstyle, hairline and facial expression as close to the reference as possible. Do not add a smile, beautify, alter facial proportions, change hairstyle, or invent different facial characteristics. Keep the face forward and preserve the original expression. Modify ONLY the clothes to ${styleDescriptions[style]}, the backdrop to ${backdrops[backdrop]}, and apply subtle even studio lighting. Natural skin texture, headroom, centered shoulders, no beauty filter, no text, watermark, extra people, or illustration. Faithful photographic edit of the original person, not a different person.`
+      // The generation style is intentionally fixed on the server. Neither the
+      // browser nor arbitrary requests can change this outfit, pose or backdrop.
+      const prompt = FORMAL_PORTRAIT_PROMPT
       const input = new FormData()
       input.append('prompt', prompt)
       input.append('input_image_0', photo, 'photo.jpg')

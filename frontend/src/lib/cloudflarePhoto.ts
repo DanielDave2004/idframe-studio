@@ -1,31 +1,62 @@
-export type StudioStyle = 'suit' | 'business-casual' | 'original'
-export type StudioBackdrop = 'white' | 'gray' | 'blue'
+import { detectPrimaryFace } from './faceDetection'
+
 export type StudioModel = 'dev' | 'klein'
 
-// FLUX.2 Klein accepts input references below 512 x 512. Preserve aspect ratio.
-async function makeReference(imageUrl: string): Promise<Blob> {
-  const img = new Image()
-  img.src = imageUrl
-  await img.decode()
-  const scale = Math.min(480 / img.naturalWidth, 480 / img.naturalHeight, 1)
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale))
-  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale))
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('Canvas is not available in this browser.')
-  context.drawImage(img, 0, 0, canvas.width, canvas.height)
-  const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
-  if (!blob) throw new Error('Could not prepare photo for AI.')
-  return blob
+type PhotoInput = string | Blob
+
+async function imageUrlFor(input: PhotoInput): Promise<{ url: string; revoke: () => void }> {
+  if (typeof input === 'string') return { url: input, revoke: () => {} }
+  const url = URL.createObjectURL(input)
+  return { url, revoke: () => URL.revokeObjectURL(url) }
 }
 
-export async function generateStudioPhoto(imageUrl: string, style: StudioStyle, backdrop: StudioBackdrop, model: StudioModel = 'klein', turnstileToken = ''): Promise<Blob> {
+// Crop the identity reference around the detected face when possible. This helps
+// exclude foreground selfie arms and reduces the source pose bias. The original
+// face pixels remain the reference, but model output identity is not guaranteed.
+async function makeReference(input: PhotoInput): Promise<Blob> {
+  const { url, revoke } = await imageUrlFor(input)
+  try {
+    const img = new Image()
+    img.src = url
+    await img.decode()
+    const width = img.naturalWidth
+    const height = img.naturalHeight
+    let face = null
+    try { face = await detectPrimaryFace(url) } catch { /* optional face detection */ }
+    let side: number
+    let x: number
+    let y: number
+    if (face) {
+      const facePixels = Math.max(face.width * width, face.height * height)
+      side = Math.min(Math.min(width, height), Math.max(facePixels * 3.1, Math.min(width, height) * 0.46))
+      x = face.x * width - side * 0.5
+      y = face.y * height - side * 0.39
+    } else {
+      side = Math.min(width, height)
+      x = (width - side) / 2
+      y = (height - side) * 0.2
+    }
+    x = Math.min(width - side, Math.max(0, x))
+    y = Math.min(height - side, Math.max(0, y))
+    const canvas = document.createElement('canvas')
+    canvas.width = 480
+    canvas.height = 480
+    const context = canvas.getContext('2d')
+    if (!context) throw new Error('Canvas is not available in this browser.')
+    context.drawImage(img, x, y, side, side, 0, 0, 480, 480)
+    const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9))
+    if (!blob) throw new Error('Could not prepare photo for AI.')
+    return blob
+  } finally {
+    revoke()
+  }
+}
+
+export async function generateStudioPhoto(input: PhotoInput, model: StudioModel = 'klein', turnstileToken = ''): Promise<Blob> {
   const endpoint = import.meta.env.VITE_CLOUDFLARE_WORKER_URL?.trim().replace(/\/$/, '')
   if (!endpoint) throw new Error('Cloudflare is not connected. Set VITE_CLOUDFLARE_WORKER_URL in your .env.local file.')
   const form = new FormData()
-  form.append('photo', await makeReference(imageUrl), 'reference.jpg')
-  form.append('style', style)
-  form.append('backdrop', backdrop)
+  form.append('photo', await makeReference(input), 'reference.jpg')
   form.append('model', model)
   form.append('turnstileToken', turnstileToken)
   const response = await fetch(`${endpoint}/api/generate`, { method: 'POST', body: form })

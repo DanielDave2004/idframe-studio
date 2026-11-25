@@ -3,7 +3,7 @@ export async function removePhotoBackground(imageUrl: string, onStatus: (message
   onStatus('Loading background removal model…')
   try {
     // Dynamic import avoids loading the sizeable AI runtime until requested.
-    const { default: removeBackground } = await import('@imgly/background-removal')
+    const { removeBackground } = await import('@imgly/background-removal')
     onStatus('Removing background… This can take a while on older devices.')
     const blob = await removeBackground(imageUrl, {
       progress: (key: string, current: number, total: number) => {

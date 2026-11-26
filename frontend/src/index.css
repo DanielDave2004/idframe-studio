@@ -101,3 +101,10 @@ html[data-theme="dark"] .site-redesign{--bg:#141a17;--card:#1c2420;--line:#35403
 .site-redesign .header-icon:hover,.site-redesign .icon-button:hover,.site-redesign .outline-button:hover{border-color:#5ca8ad}
 .site-redesign .primary-button{box-shadow:0 10px 24px rgba(21,117,124,.18)}
 .site-redesign .card,.site-redesign .upload-panel{box-shadow:0 10px 30px rgba(19,76,83,.08)}
+
+/* IDFrame Studio brand mark: preserve the original SVG artwork on both themes. */
+.site-redesign .brand-icon.brand-logo{background:transparent;color:inherit;padding:0;display:grid;place-items:center;overflow:hidden;border-radius:10px;flex-shrink:0}
+.site-redesign .brand-logo img{display:block;width:100%;height:100%;object-fit:contain}
+.site-redesign .brand{white-space:nowrap}
+@media(max-width:620px){.site-redesign .brand{font-size:18px;gap:7px;letter-spacing:-.7px}.site-redesign .brand-beta{display:inline-flex;font-size:8px;padding:4px 5px}.site-redesign .brand-icon.brand-logo{width:34px;height:34px}}
+@media(max-width:380px){.site-redesign .brand-beta{display:none}}

@@ -1,0 +1,158 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <!-- Main Badge Background Gradient -->
+    <radialGradient id="badgeBg" cx="28%" cy="22%" r="78%" fx="25%" fy="20%">
+      <stop offset="0%" stop-color="#054e55"/>
+      <stop offset="45%" stop-color="#02282c"/>
+      <stop offset="100%" stop-color="#011214"/>
+    </radialGradient>
+
+    <!-- Outer Badge Neon Cyan Border Gradient -->
+    <linearGradient id="badgeBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#53fff6"/>
+      <stop offset="50%" stop-color="#1fe6da"/>
+      <stop offset="100%" stop-color="#0bc5b8"/>
+    </linearGradient>
+
+    <!-- Camera Frame Gradient (White top-left to Vibrant Cyan top-right, Metallic Silver bottom) -->
+    <linearGradient id="frameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="42%" stop-color="#f2f9fa"/>
+      <stop offset="58%" stop-color="#19f3e6"/>
+      <stop offset="78%" stop-color="#3cd7cf"/>
+      <stop offset="100%" stop-color="#b8c9cc"/>
+    </linearGradient>
+
+    <!-- Silhouette / Torso Metallic White-to-Teal-Shadow Gradient -->
+    <linearGradient id="personGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="68%" stop-color="#e4eff1"/>
+      <stop offset="100%" stop-color="#9cb5b9"/>
+    </linearGradient>
+
+    <!-- Dynamic Orbit Swoosh Gradient -->
+    <linearGradient id="swooshGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#07c8bc"/>
+      <stop offset="45%" stop-color="#3bf9ee"/>
+      <stop offset="80%" stop-color="#75fff7"/>
+      <stop offset="100%" stop-color="#12d6ca"/>
+    </linearGradient>
+
+    <!-- "Frame" Text Cyan Gradient -->
+    <linearGradient id="frameTextGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#09c9bd"/>
+      <stop offset="55%" stop-color="#1ce8dc"/>
+      <stop offset="100%" stop-color="#3ef7ec"/>
+    </linearGradient>
+
+    <!-- Soft Glow Filter for Border -->
+    <filter id="cyanGlow" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Clip path for the swoosh crossing inside/around the frame -->
+    <clipPath id="badgeClip">
+      <rect x="20" y="20" width="960" height="960" rx="190" ry="190"/>
+    </clipPath>
+  </defs>
+
+  <!-- Rounded Square App Icon / Badge (Background outside is completely transparent) -->
+  <g clip-path="url(#badgeClip)">
+    <rect x="20" y="20" width="960" height="960" rx="190" ry="190" fill="url(#badgeBg)"/>
+  </g>
+
+  <!-- Glowing Cyan Outline of the Square Badge -->
+  <rect x="24" y="24" width="952" height="952" rx="186" ry="186"
+        fill="none" stroke="url(#badgeBorder)" stroke-width="11" filter="url(#cyanGlow)"/>
+
+  <!-- Center Icon Group -->
+  <g id="logo-icon">
+    <!-- Left Tail of the Orbit Swoosh (Behind Frame) -->
+    <path d="M 248 455
+             C 172 518, 178 584, 272 605
+             C 226 575, 214 522, 248 475 Z"
+          fill="url(#swooshGrad)"/>
+
+    <!-- Rounded Square Camera / ID Frame -->
+    <rect x="266" y="138" width="468" height="444" rx="74" ry="74"
+          fill="none" stroke="url(#frameGrad)" stroke-width="38"/>
+
+    <!-- Top-Left Viewfinder Corner Bracket -->
+    <path d="M 326 266 L 326 212 Q 326 198 340 198 L 394 198"
+          fill="none" stroke="#eef6f7" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Top-Right Viewfinder Corner Bracket -->
+    <path d="M 606 198 L 660 198 Q 674 198 674 212 L 674 266"
+          fill="none" stroke="#eef6f7" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Person Head Silhouette -->
+    <circle cx="500" cy="316" r="68" fill="url(#personGrad)"/>
+
+    <!-- Person Shoulders, Suit Collar & Tie Silhouette -->
+    <!-- Left Shoulder & Lapel -->
+    <path d="M 358 498
+             C 360 444, 404 416, 462 410
+             L 486 452
+             L 476 498 Z"
+          fill="url(#personGrad)"/>
+
+    <!-- Right Shoulder & Lapel -->
+    <path d="M 642 498
+             C 640 444, 596 416, 538 410
+             L 514 452
+             L 524 498 Z"
+          fill="url(#personGrad)"/>
+
+    <!-- Tie Knot & Blade -->
+    <polygon points="489,418 511,418 506,435 494,435" fill="#eef6f7"/>
+    <polygon points="494,441 506,441 513,498 487,498" fill="#eef6f7"/>
+
+    <!-- Subtle Dark Teal Shadow Overlay on Lower-Right of Torso under Swoosh -->
+    <path d="M 505 498 L 642 498 C 642 478, 634 462, 622 450 C 585 470, 545 486, 505 498 Z"
+          fill="#02262a" opacity="0.72"/>
+
+    <!-- Bottom-Left Viewfinder Corner Bracket -->
+    <path d="M 326 444 L 326 498 Q 326 512 340 512 L 394 512"
+          fill="none" stroke="#eef6f7" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Foreground Sweeping Cyan Swoosh (Passing across lower-right torso & wrapping around right side) -->
+    <path d="M 465 512
+             C 590 488, 765 395, 782 308
+             C 790 264, 756 234, 718 220
+             C 782 225, 836 262, 826 318
+             C 810 408, 630 492, 465 512 Z"
+          fill="url(#swooshGrad)"/>
+  </g>
+
+  <!-- Typography Group -->
+  <g id="logo-typography">
+    <!-- "IDFrame" Wordmark -->
+    <text x="500" y="758"
+          text-anchor="middle"
+          font-family="'Montserrat', 'Poppins', 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+          font-weight="800"
+          font-size="136"
+          letter-spacing="-2">
+      <tspan fill="#ffffff">ID</tspan><tspan fill="url(#frameTextGrad)">Frame</tspan>
+    </text>
+
+    <!-- Left Horizontal Accent Line -->
+    <line x1="216" y1="826" x2="318" y2="826" stroke="#d9ecee" stroke-width="4.5" stroke-linecap="round"/>
+
+    <!-- "S T U D I O" Subtitle -->
+    <text x="504" y="841"
+          text-anchor="middle"
+          font-family="'Montserrat', 'Poppins', 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+          font-weight="600"
+          font-size="44"
+          letter-spacing="18"
+          fill="#eef7f8">STUDIO</text>
+
+    <!-- Right Horizontal Accent Line -->
+    <line x1="682" y1="826" x2="784" y2="826" stroke="#d9ecee" stroke-width="4.5" stroke-linecap="round"/>
+  </g>
+</svg>

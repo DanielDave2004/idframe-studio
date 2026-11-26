@@ -131,3 +131,7 @@ IDFrame now exposes two browser routes:
 - `/studiopage`: photo editor, AI generation, Python enhancement and exports. If no original photo is saved, it shows the upload control.
 
 The app uses the browser History API and stores the uploaded session locally; back/forward, deep links and refreshes work with the included `frontend/public/_redirects` Cloudflare Pages rewrites. The root `/` redirects within the SPA to `/homepage`. Build the frontend with `npm run build` and deploy `frontend/dist` to Cloudflare Pages. Both routes share the same production origin, so no additional Worker `ALLOWED_ORIGIN`, Render `FRONTEND_ORIGINS` or Turnstile hostnames are needed.
+
+## Branding and default theme
+
+The header and site favicon now use `frontend/public/idframe-studio-logo.svg`. The header reads **IDFrame Studio** with a **BETA** badge. New visitors start in light mode even when their OS is set to dark; visitors can switch themes and their preference is saved in browser local storage (`idframe-theme`).

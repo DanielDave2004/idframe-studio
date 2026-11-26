@@ -24,11 +24,18 @@ function App() {
   const [page,setPage] = useState<Page>(pageFromLocation)
   const [restoring,setRestoring] = useState(true)
   const [error,setError] = useState('')
-  const [dark,setDark] = useState(() => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
+  const [dark,setDark] = useState(() => {
+    try { return window.localStorage.getItem('idframe-theme') === 'dark' }
+    catch { return false } // Default to light mode if storage is blocked.
+  })
   const [help,setHelp] = useState(false)
   const [menuOpen,setMenuOpen] = useState(false)
   const [expandedFaq,setExpandedFaq] = useState<number|null>(0)
-  useEffect(() => {document.documentElement.dataset.theme=dark?'dark':'light'},[dark])
+  useEffect(() => {
+    document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+    try { window.localStorage.setItem('idframe-theme', dark ? 'dark' : 'light') }
+    catch { /* Browsers with blocked storage still support theme switching. */ }
+  }, [dark])
   useEffect(() => {
     // Keep direct links, refreshes, and browser back/forward in sync with React.
     if (window.location.pathname === '/') window.history.replaceState(null, '', '/homepage' + window.location.search + window.location.hash)
@@ -70,7 +77,7 @@ function App() {
   const studioActive = page === 'studiopage'
   return <div className={`site-shell site-redesign ${studioActive && photo ? 'editing-mode' : ''}`}>
     <header className="site-header"><div className="header-inner">
-      <a href="/homepage" className="brand" onClick={event=>{event.preventDefault();navigate('homepage')}} aria-label="IDFrame home"><span className="brand-icon"><Aperture size={21} strokeWidth={2.2}/></span><span>ID<span className="brand-light">Frame</span></span><span className="brand-beta">STUDIO</span></a>
+      <a href="/homepage" className="brand" onClick={event=>{event.preventDefault();navigate('homepage')}} aria-label="IDFrame home"><span className="brand-icon brand-logo"><img src="/idframe-studio-logo.svg" alt="" width="40" height="40"/></span><span>ID<span className="brand-light">Frame</span> <span className="brand-light">Studio</span></span><span className="brand-beta">BETA</span></a>
       <nav className={`main-nav ${menuOpen?'nav-open':''}`} aria-label="Main navigation">
         <a href="/homepage#how-it-works" onClick={event=>{event.preventDefault();goToSection('how-it-works')}}>How it works</a><a href="/homepage#features" onClick={event=>{event.preventDefault();goToSection('features')}}>Features</a><a href="/homepage#faq" onClick={event=>{event.preventDefault();goToSection('faq')}}>FAQ</a>
       </nav>

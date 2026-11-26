@@ -5,6 +5,8 @@ import PhotoEditor from './components/PhotoEditor'
 import { clearPhotos, loadPhoto, savePhoto } from './lib/photoSession'
 
 type Photo = { url: string; name: string }
+type Page = 'homepage' | 'studiopage'
+const pageFromLocation = (): Page => window.location.pathname === '/studiopage' ? 'studiopage' : 'homepage'
 const steps = [
   { number:'01', title:'Upload your photo', description:'Start with a clear selfie or everyday portrait. You don’t need a studio or a camera setup.', icon: ImageIcon },
   { number:'02', title:'Create your look', description:'Choose a formal outfit and a clean backdrop, then generate with Cloudflare AI.', icon: WandSparkles },
@@ -19,6 +21,7 @@ const faqs = [
 
 function App() {
   const [photo,setPhoto] = useState<Photo|null>(null)
+  const [page,setPage] = useState<Page>(pageFromLocation)
   const [restoring,setRestoring] = useState(true)
   const [error,setError] = useState('')
   const [dark,setDark] = useState(() => window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false)
@@ -26,6 +29,28 @@ function App() {
   const [menuOpen,setMenuOpen] = useState(false)
   const [expandedFaq,setExpandedFaq] = useState<number|null>(0)
   useEffect(() => {document.documentElement.dataset.theme=dark?'dark':'light'},[dark])
+  useEffect(() => {
+    // Keep direct links, refreshes, and browser back/forward in sync with React.
+    if (window.location.pathname === '/') window.history.replaceState(null, '', '/homepage' + window.location.search + window.location.hash)
+    const onPopState = () => setPage(pageFromLocation())
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+  }, [])
+  const navigate = (next: Page, anchor?: string) => {
+    const url = `/${next}${anchor ? `#${anchor}` : ''}`
+    window.history.pushState(null, '', url)
+    setPage(next)
+    setMenuOpen(false)
+    window.requestAnimationFrame(() => {
+      if (anchor) document.getElementById(anchor)?.scrollIntoView({ behavior: 'smooth' })
+      else window.scrollTo({ top: 0, behavior: 'auto' })
+    })
+  }
+  const goToSection = (section: string) => {
+    if (page !== 'homepage') navigate('homepage', section)
+    else document.getElementById(section)?.scrollIntoView({ behavior: 'smooth' })
+    setMenuOpen(false)
+  }
   useEffect(() => {
     let active=true
     loadPhoto('original').then(saved=>{if(active && saved) setPhoto({url:URL.createObjectURL(saved.blob),name:saved.name})})
@@ -37,23 +62,23 @@ function App() {
   const onUpload=(file:File)=>{
     setPhoto({url:URL.createObjectURL(file),name:file.name})
     setError('')
-    window.scrollTo({top:0,behavior:'smooth'})
+    navigate('studiopage')
     void clearPhotos().then(()=>savePhoto('original',file,file.name)).catch(error=>console.warn('Photo session could not be saved:',error))
   }
-  const reset=()=>{setPhoto(null);setError('');void clearPhotos().catch(console.warn);window.scrollTo({top:0,behavior:'smooth'})}
-  const scrollToUpload=()=>document.getElementById('start')?.scrollIntoView({behavior:'smooth',block:'center'})
-  const closeMenu=()=>setMenuOpen(false)
-  return <div className={`site-shell site-redesign ${photo ? 'editing-mode' : ''}`}>
+  const reset=()=>{setPhoto(null);setError('');void clearPhotos().catch(console.warn);navigate('homepage')}
+  const scrollToUpload=()=>goToSection('start')
+  const studioActive = page === 'studiopage'
+  return <div className={`site-shell site-redesign ${studioActive && photo ? 'editing-mode' : ''}`}>
     <header className="site-header"><div className="header-inner">
-      <a href="#top" className="brand" onClick={event=>{if(photo){event.preventDefault();reset()}closeMenu()}} aria-label="IDFrame home"><span className="brand-icon"><Aperture size={21} strokeWidth={2.2}/></span><span>ID<span className="brand-light">Frame</span></span><span className="brand-beta">STUDIO</span></a>
+      <a href="/homepage" className="brand" onClick={event=>{event.preventDefault();navigate('homepage')}} aria-label="IDFrame home"><span className="brand-icon"><Aperture size={21} strokeWidth={2.2}/></span><span>ID<span className="brand-light">Frame</span></span><span className="brand-beta">STUDIO</span></a>
       <nav className={`main-nav ${menuOpen?'nav-open':''}`} aria-label="Main navigation">
-        <a href="#how-it-works" onClick={closeMenu}>How it works</a><a href="#features" onClick={closeMenu}>Features</a><a href="#faq" onClick={closeMenu}>FAQ</a>
+        <a href="/homepage#how-it-works" onClick={event=>{event.preventDefault();goToSection('how-it-works')}}>How it works</a><a href="/homepage#features" onClick={event=>{event.preventDefault();goToSection('features')}}>Features</a><a href="/homepage#faq" onClick={event=>{event.preventDefault();goToSection('faq')}}>FAQ</a>
       </nav>
-      <div className="header-actions"><span className="header-caption"><span className="live-dot"/> AI portrait studio</span><button className="header-icon" onClick={()=>setDark(v=>!v)} aria-label="Toggle theme" title="Toggle theme">{dark?<Sun size={19}/>:<Moon size={19}/>}</button><button className="header-icon help-icon" onClick={()=>setHelp(true)} aria-label="About IDFrame"><CircleHelp size={19}/></button><button className="nav-cta" onClick={photo?reset:scrollToUpload}>{photo?'New photo':'Open studio'} <ArrowUpRight size={16}/></button><button className="header-icon mobile-nav-toggle" onClick={()=>setMenuOpen(v=>!v)} aria-label="Toggle navigation">{menuOpen?<X size={20}/>:<Menu size={20}/>}</button></div>
+      <div className="header-actions"><span className="header-caption"><span className="live-dot"/> AI portrait studio</span><button className="header-icon" onClick={()=>setDark(v=>!v)} aria-label="Toggle theme" title="Toggle theme">{dark?<Sun size={19}/>:<Moon size={19}/>}</button><button className="header-icon help-icon" onClick={()=>setHelp(true)} aria-label="About IDFrame"><CircleHelp size={19}/></button><button className="nav-cta" onClick={studioActive ? reset : () => navigate('studiopage')}>{studioActive ? 'New photo' : 'Open studio'} <ArrowUpRight size={16}/></button><button className="header-icon mobile-nav-toggle" onClick={()=>setMenuOpen(v=>!v)} aria-label="Toggle navigation">{menuOpen?<X size={20}/>:<Menu size={20}/>}</button></div>
     </div></header>
     <main id="top" className="main-content">
       {error&&<div className="alert" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={()=>setError('')}><X size={18}/></button></div>}
-      {restoring?<div className="restore-state" role="status">Restoring your photo studio…</div>:photo?<PhotoEditor imageUrl={photo.url} fileName={photo.name} onReset={reset} onError={setError}/>:<>
+      {restoring?<div className="restore-state" role="status">Restoring your photo studio…</div>:studioActive ? (photo ? <PhotoEditor imageUrl={photo.url} fileName={photo.name} onReset={reset} onError={setError}/> : <section className="studio-section studio-direct-upload"><div className="section-intro"><div className="section-label">IDFRAME / STUDIO</div><h2>Professional Photo Studio</h2><p>Upload a photo to start generating and exporting your professional portrait.</p><button className="outline-button" onClick={() => navigate('homepage')}>Back to homepage</button></div><PhotoUploader onUpload={onUpload} onError={setError}/></section>) : <>
         <section className="landing-hero" aria-labelledby="hero-title">
           <div className="hero-copy"><div className="hero-kicker"><span className="kicker-mark"><Sparkles size={14}/></span> YOUR PERSONAL AI PHOTO STUDIO <span className="kicker-rule"/></div>
             <h1 id="hero-title">Your best first<br/>impression <em>starts here.</em></h1>
@@ -71,7 +96,7 @@ function App() {
         <section className="bottom-cta"><div><div className="section-label">READY WHEN YOU ARE</div><h2>A professional look<br/>starts with one photo.</h2><p>Bring your everyday photo. We'll help with the rest.</p></div><button className="hero-primary" onClick={scrollToUpload}>Create your portrait <ArrowRight size={19}/></button></section>
       </>}
     </main>
-    {!photo&&<footer className="site-footer"><div className="footer-brand"><span className="footer-mark"><Aperture size={19}/></span><strong>IDFrame</strong><span>Professional portraits, made simpler.</span></div><div className="footer-links"><a href="#how-it-works">How it works</a><a href="#features">Features</a><a href="#faq">FAQ</a><a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={17}/></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} IDFrame. All rights reserved.</span><span>Generative AI can change facial details. Not intended to verify official ID compliance.</span></div></footer>}
+    {!studioActive&&<footer className="site-footer"><div className="footer-brand"><span className="footer-mark"><Aperture size={19}/></span><strong>IDFrame</strong><span>Professional portraits, made simpler.</span></div><div className="footer-links"><a href="/homepage#how-it-works">How it works</a><a href="/homepage#features">Features</a><a href="/homepage#faq">FAQ</a><a href="https://github.com" target="_blank" rel="noreferrer" aria-label="GitHub"><Github size={17}/></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} IDFrame. All rights reserved.</span><span>Generative AI can change facial details. Not intended to verify official ID compliance.</span></div></footer>}
     {help&&<div className="modal-overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setHelp(false)}}><div className="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title"><button className="close-modal" onClick={()=>setHelp(false)} aria-label="Close"><X size={20}/></button><span className="modal-mark"><Aperture size={24}/></span><h2 id="help-title">Welcome to IDFrame</h2><p>IDFrame helps turn ordinary portraits into professional-looking photos. Upload a photo, choose an AI style, review the result, then refine your crop and download.</p><div className="modal-note"><LockKeyhole size={18}/><span>Local editing stays in your browser. Cloud generation sends your photo to the Cloudflare Worker you configure.</span></div><p className="modal-caution">Generative AI can change facial details. The results are for resumes and profile photos, not guaranteed to satisfy official ID or passport rules.</p><button className="primary-button" onClick={()=>setHelp(false)}>Understood <ArrowRight size={17}/></button></div></div>}
   </div>
 }

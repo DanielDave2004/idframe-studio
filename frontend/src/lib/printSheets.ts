@@ -32,7 +32,7 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   page.drawText('IDFrame Studio', { x: 36, y: height - 38, size: 24, font: fontBold, color: rgb(1, 1, 1) })
   page.drawText('Professional Photo Package', { x: 36, y: height - 54, size: 10, font: fontRegular, color: rgb(0.87, 0.97, 0.97) })
   page.drawText('4 copies of 2x2 inches + 6 copies of 1x1 inch on one page', { x: width - 250, y: height - 37, size: 10, font: fontRegular, color: rgb(0.90, 0.98, 0.98) })
-  page.drawText('IDFrame Studio • Print at actual size / 100% • Borders included for safe cutting', { x: 36, y: 17, size: 9, font: fontRegular, color: textDark })
+  page.drawText('IDFrame Studio - Print at actual size / 100% - Borders included for safe cutting', { x: 36, y: 17, size: 9, font: fontRegular, color: textDark })
 
   const contentTop = height - HEADER_HEIGHT - 22
   const contentBottom = FOOTER_HEIGHT + 22
@@ -45,7 +45,7 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   const largeGridHeight = largeRows * largeSize
   const largeX = (width - largeGridWidth) / 2
   const largeTitleY = contentTop - 8
-  page.drawText('4 copies • 2 x 2 inches', { x: width / 2 - 58, y: largeTitleY, size: 12, font: fontBold, color: brand })
+  page.drawText('4 copies - 2 x 2 inches', { x: width / 2 - 58, y: largeTitleY, size: 12, font: fontBold, color: brand })
   const largeTopY = largeTitleY - 18
   const largeBottomY = largeTopY - largeGridHeight
   for (let row = 0; row < largeRows; row++) {
@@ -64,7 +64,7 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   const smallGridHeight = smallRows * smallSize
   const smallX = (width - smallGridWidth) / 2
   const smallTitleY = contentBottom + 190
-  page.drawText('6 copies • 1 x 1 inch', { x: width / 2 - 49, y: smallTitleY, size: 12, font: fontBold, color: brand })
+  page.drawText('6 copies - 1 x 1 inch', { x: width / 2 - 49, y: smallTitleY, size: 12, font: fontBold, color: brand })
   const smallTopY = smallTitleY - 18
   const smallBottomY = smallTopY - smallGridHeight
   for (let row = 0; row < smallRows; row++) {

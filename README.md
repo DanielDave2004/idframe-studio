@@ -81,3 +81,10 @@ API health endpoints: Render `<your Render URL>/health`; Worker `https://idframe
 
 ### Simplified generation
 The Align Face and Remove Background buttons and Python segmentation endpoint have been removed. The React frontend still uses MediaPipe face detection **internally** in `frontend/src/lib/cloudflarePhoto.ts` before generation to crop a face-centered AI reference. Python (`/api/enhance`) still enhances image contrast, color, and sharpness. Generated portraits retain manual crop/zoom and PNG/PDF exports.
+
+
+## Branding (Nov 2026)
+- The supplied IDFrame Studio teal/silver logo is in `frontend/public/idframe-studio-logo.svg`.
+- The matching icon-only SVG is in `frontend/public/idframe-icon.svg` (header, footer); full SVG used as the favicon.
+- Light mode is the first-visit default; visitors can switch to dark mode, persisted in localStorage.
+- No changes to the Worker, Python routes, or generation quota are required for this visual update.

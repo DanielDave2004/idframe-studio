@@ -261,3 +261,17 @@ html[data-theme="dark"] .site-redesign .feature-visual{background:linear-gradien
     min-width: 42px;
   }
 }
+
+
+/* Restored framed illustrations with an arrow action after each square. */
+.site-redesign .hero-visual{border:1px solid #b8d7d6;border-radius:20px;background:linear-gradient(145deg,#e5f3f0,#d1e5e3);box-shadow:0 16px 40px rgba(3,56,63,.08)}
+.site-redesign .hero-visual .visual-dot-grid{border-radius:20px}
+.site-redesign .feature-visual{border-radius:18px;border:1px solid #90c5c7;background:linear-gradient(145deg,#cbe9e8,#a9d7da);overflow:hidden}
+.site-redesign .feature-section{border-radius:20px}
+.visual-arrow-link,.feature-arrow-link{position:absolute;right:19px;bottom:18px;z-index:5;display:grid;place-items:center;width:40px;height:40px;color:#e8ffff;background:#07575b;border:1px solid #178a90;border-radius:11px;text-decoration:none;transition:transform .16s ease,background .16s ease}
+.visual-arrow-link:hover,.feature-arrow-link:hover{transform:translate(2px,-2px);background:#087a81}
+.site-redesign .feature-stamp{right:74px;bottom:22px;color:#0d474a}
+html[data-theme="dark"] .site-redesign .hero-visual{background:linear-gradient(145deg,#163a3e,#0b262a);border-color:#27646a}
+html[data-theme="dark"] .site-redesign .feature-visual{background:linear-gradient(145deg,#164c52,#09353b);border-color:#2a7479}
+@media(max-width:900px){.site-redesign .hero-visual{min-height:460px}.site-redesign .feature-visual{min-height:360px}}
+@media(max-width:560px){.site-redesign .hero-visual{min-height:400px}.visual-arrow-link,.feature-arrow-link{width:35px;height:35px}}

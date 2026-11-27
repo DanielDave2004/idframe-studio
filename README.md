@@ -1,6 +1,6 @@
 # IDFrame Studio | React + Render Python + Cloudflare Workers AI
 
-This version has **two browser routes** (`/homepage` and `/studiopage`), two studio tabs (Generate / Export), the light-first teal/cyan theme based on the IDFrame Studio SVG, and the existing logo + BETA header.
+This version has **two browser routes** (`/` and `/studiopage`), two studio tabs (Generate / Export), the light-first teal/cyan theme based on the IDFrame Studio SVG, and the existing logo + BETA header.
 
 ## Features
 
@@ -88,3 +88,7 @@ The Align Face and Remove Background buttons and Python segmentation endpoint ha
 - The matching icon-only SVG is in `frontend/public/idframe-icon.svg` (header, footer); full SVG used as the favicon.
 - Light mode is the first-visit default; visitors can switch to dark mode, persisted in localStorage.
 - No changes to the Worker, Python routes, or generation quota are required for this visual update.
+
+
+Homepage URL: `/` (legacy `/homepage` redirects to `/`). Studio URL: `/studiopage`.
+The PDF header and footer retain brand labels without extra explanatory text.

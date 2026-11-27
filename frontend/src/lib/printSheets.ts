@@ -32,8 +32,7 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   page.drawRectangle({ x: 0, y: 0, width, height: FOOTER_HEIGHT, color: brandSoft })
   page.drawText('IDFrame Studio', { x: 36, y: height - 38, size: 24, font: fontBold, color: rgb(1, 1, 1) })
   page.drawText('Professional Photo Package', { x: 36, y: height - 54, size: 10, font: fontRegular, color: rgb(0.87, 0.97, 0.97) })
-  page.drawText('4 x 2x2 + 6 x 1x1 - 8x11 in', { x: width - 250, y: height - 37, size: 10, font: fontRegular, color: rgb(0.90, 0.98, 0.98) })
-  page.drawText('IDFrame Studio - Print at actual size / 100% - Borders included for safe cutting', { x: 36, y: 17, size: 9, font: fontRegular, color: textDark })
+  page.drawText('IDFrame Studio', { x: 36, y: 16, size: 11, font: fontBold, color: textDark })
 
   const contentTop = height - HEADER_HEIGHT - 22
   const contentBottom = FOOTER_HEIGHT + 22

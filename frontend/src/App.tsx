@@ -75,7 +75,6 @@ function App() {
     navigate('studiopage')
     void clearPhotos().then(()=>savePhoto('original',file,file.name)).catch(error=>console.warn('Photo session could not be saved:',error))
   }
-  const reset=()=>{setPhoto(null);setError('');void clearPhotos().catch(console.warn);navigate('homepage')}
   const scrollToUpload=()=>goToSection('start')
   const studioActive = page === 'studiopage'
   return <div className={`site-shell site-redesign ${studioActive && photo ? 'editing-mode' : ''}`}>
@@ -88,7 +87,7 @@ function App() {
     </div></header>
     <main id="top" className="main-content">
       {error&&<div className="alert" role="alert"><span>{error}</span><button aria-label="Dismiss error" onClick={()=>setError('')}><X size={18}/></button></div>}
-      {restoring?<div className="restore-state" role="status">Restoring your photo studio…</div>:studioActive ? (photo ? <PhotoEditor imageUrl={photo.url} fileName={photo.name} onReset={reset} onError={setError}/> : <section className="studio-section studio-direct-upload"><div className="section-intro"><div className="section-label">IDFRAME / STUDIO</div><h2>Professional Photo Studio</h2><p>Upload a photo to start generating and exporting your professional portrait.</p><button className="outline-button" onClick={() => navigate('homepage')}>Back to homepage</button></div><PhotoUploader onUpload={onUpload} onError={setError}/></section>) : <>
+      {restoring?<div className="restore-state" role="status">Restoring your photo studio…</div>:studioActive ? (photo ? <PhotoEditor key={photo.url} imageUrl={photo.url} fileName={photo.name} onNewPhoto={onUpload} onError={setError}/> : <section className="studio-section studio-direct-upload"><div className="section-intro"><div className="section-label">IDFRAME / STUDIO</div><h2>Professional Photo Studio</h2><p>Upload a photo to start generating and exporting your professional portrait.</p><button className="outline-button" onClick={() => navigate('homepage')}>Back to homepage</button></div><PhotoUploader onUpload={onUpload} onError={setError}/></section>) : <>
         <section className="landing-hero" aria-labelledby="hero-title">
           <div className="hero-copy"><div className="hero-kicker"><span className="kicker-mark"><Sparkles size={14}/></span> YOUR PERSONAL AI PHOTO STUDIO <span className="kicker-rule"/></div>
             <h1 id="hero-title">Your best first<br/>impression <em>starts here.</em></h1>
@@ -110,6 +109,7 @@ function App() {
                 <div className="comparison-image after"><img src="/example-female-after.webp" alt="Example after: the same person wearing a black blazer and white blouse" loading="lazy"/><span className="comparison-tag">AFTER</span></div>
               </div>
             </div>
+            <p className="comparison-disclaimer">Illustrative Photos Only</p>
           </div>
         </section>
         <div className="trust-strip"><span>MADE FOR YOUR NEXT OPPORTUNITY</span><div><span>Resumes</span><i/> <span>LinkedIn</span><i/> <span>Portfolios</span><i/> <span>Professional profiles</span></div></div>

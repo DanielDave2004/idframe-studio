@@ -334,3 +334,8 @@ html[data-theme="dark"] .comparison-image.after{border-color:#17c9c7}
 /* Section 03: use a photographic example instead of a drawn character */
 .paper-image{background:#eef4f4;}
 .feature-real-portrait{display:block;width:100%;height:100%;object-fit:cover;object-position:center 32%}
+
+/* Four example portraits: clear illustration disclosure. */
+.comparison-disclaimer { margin: 2px 0 0; text-align:center; font-size: 10px; line-height: 1.5; font-weight: 700; letter-spacing: .075em; color: #7fb7b9; }
+html:not([data-theme="dark"]) .comparison-disclaimer { color: #3c777b; }
+.new-photo-picker { display: flex; align-items: center; }

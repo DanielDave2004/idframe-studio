@@ -92,3 +92,10 @@ The Align Face and Remove Background buttons and Python segmentation endpoint ha
 
 Homepage URL: `/` (legacy `/homepage` redirects to `/`). Studio URL: `/studiopage`.
 The PDF header and footer retain brand labels without extra explanatory text.
+
+
+## UI update: Generate and New Photo
+
+- Studio Generate button is labeled **Generate Portrait**.
+- **New photo** opens the system file picker directly from the Studio. Canceling keeps the existing photo; selecting a valid JPG, PNG, or WebP image resets the editor to the new photo without navigating away.
+- Homepage Before / After image examples display **Illustrative Photos Only** below the four images.

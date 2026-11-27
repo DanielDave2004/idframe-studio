@@ -2,20 +2,20 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
 import { ArrowRight, Check, Download, ImageIcon, LoaderCircle, Minus, Plus, Printer, RotateCcw, ShieldCheck, Sparkles, Upload, Undo2 } from 'lucide-react'
 import { type Background, type Format, type PixelCrop } from '../types/photo'
-import { downloadBlob, exportPhoto } from '../lib/imageProcessing'
+import { downloadBlob, exportPhoto, validateImage } from '../lib/imageProcessing'
 import { generateStudioPhoto, getGenerationQuota, type StudioModel, type OutfitChoice } from '../lib/cloudflarePhoto'
 import { enhancePhotoInPython } from '../lib/pythonPhoto'
 import Turnstile from './Turnstile'
 import { downloadPrintSheet } from '../lib/printSheets'
 import { clearGenerated, loadPhoto, savePhoto } from '../lib/photoSession'
 
-type Props = { imageUrl: string; fileName: string; onReset: () => void; onError: (message: string) => void }
+type Props = { imageUrl: string; fileName: string; onNewPhoto: (file: File) => void; onError: (message: string) => void }
 function safeBaseName(fileName: string) {
   const base = fileName.replace(/\.[^.]+$/, '')
   return (base || 'photo').replace(/[^a-zA-Z0-9-_ ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase()
 }
 
-export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Props) {
+export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }: Props) {
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
   const [background, setBackground] = useState<Background>('white')
@@ -27,6 +27,7 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
   const [studioModel, setStudioModel] = useState<StudioModel>('klein')
   const [generatedUrl, setGeneratedUrl] = useState<string | null>(null)
   const generatedRef = useRef<string | null>(null)
+  const newPhotoInputRef = useRef<HTMLInputElement>(null)
   const enhancement = 0
   const [status, setStatus] = useState('')
   const [notice, setNotice] = useState('')
@@ -181,7 +182,24 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
   return <div className="editor-page studio-app">
     <div className="editor-heading studio-toolbar">
       <div><div className="eyebrow"><span className="eyebrow-dot"/> IDFRAME / WORKSPACE</div><h1>Professional Photo Studio</h1><p>Generate, refine, and print your portrait, all in one workspace.</p></div>
-      <button className="outline-button change-button" type="button" onClick={onReset}><Upload size={16}/> New photo</button>
+      <div className="new-photo-picker">
+        <button className="outline-button change-button" type="button" onClick={() => newPhotoInputRef.current?.click()}><Upload size={16}/> New photo</button>
+        <input
+          ref={newPhotoInputRef}
+          type="file"
+          className="visually-hidden"
+          accept="image/jpeg,image/png,image/webp"
+          aria-label="Choose a new photo"
+          onChange={event => {
+            const file = event.currentTarget.files?.[0]
+            event.currentTarget.value = ''
+            if (!file) return // Cancel keeps the current portrait and stays in Studio.
+            const error = validateImage(file)
+            if (error) { onError(error); return }
+            onNewPhoto(file)
+          }}
+        />
+      </div>
     </div>
     <div className="studio-layout">
       <section className="studio-canvas card" aria-label="Photo editor">
@@ -216,7 +234,7 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
             <label htmlFor="studio-model">AI model</label><select id="studio-model" value={studioModel} onChange={e => setStudioModel(e.target.value as StudioModel)} disabled={cloudBusy}><option value="klein">FLUX.2 Klein 4B · economical</option><option value="dev">FLUX.2 Dev · higher detail, heavier quota</option></select>
             <div className="studio-quality"><strong>Combined workflow</strong><span>Step 1 · Python enhances the uploaded photo</span><span>Step 2 · Cloudflare generates the selected outfit</span><span>Step 3 · Crop, zoom and export</span></div>
             <Turnstile siteKey={turnstileKey} onToken={updateToken} resetKey={turnstileReset}/>
-            <button className="primary-button professional-action" type="button" disabled={cloudBusy || quota?.remaining === 0 || (!!turnstileKey && !turnstileToken)} onClick={handleCloudflareGenerate}>{cloudBusy ? <LoaderCircle className="spinning" size={17}/> : <Sparkles size={17}/>} {cloudBusy ? 'Generating portrait…' : 'Generate formal ID portrait'} <ArrowRight size={16}/></button>
+            <button className="primary-button professional-action" type="button" disabled={cloudBusy || quota?.remaining === 0 || (!!turnstileKey && !turnstileToken)} onClick={handleCloudflareGenerate}>{cloudBusy ? <LoaderCircle className="spinning" size={17}/> : <Sparkles size={17}/>} {cloudBusy ? 'Generating portrait…' : 'Generate Portrait'} <ArrowRight size={16}/></button>
             {generatedUrl && <button className="outline-button ai-action" type="button" onClick={() => { setGeneratedUrl(null); setPixels(null); setBackground('white'); void clearGenerated().catch(console.warn); setNotice('Original photo restored.') }}><Undo2 size={16}/> Return to original</button>}
             <p className="help-text">The app sends your photo only when you generate. AI can still alter facial details or fail to fully straighten a pose. Always compare the result with the original.</p>
 

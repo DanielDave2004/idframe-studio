@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Form
 from fastapi.responses import Response
-from app.services.images import read_image, analyze, polish
+from app.services.images import read_image, analyze, polish, verify_face
 
 router = APIRouter(prefix="/api")
 
@@ -15,3 +15,10 @@ async def enhance_photo(photo: UploadFile = File(...), strength: float = Form(0.
         raise HTTPException(422, "Strength must be between 0 and 1.")
     image = await read_image(photo)
     return Response(content=polish(image, strength), media_type="image/jpeg", headers={"Cache-Control":"no-store"})
+
+
+@router.post("/verify-face")
+async def verify_face_photo(photo: UploadFile = File(...)):
+    """CPU-only face check, used when browser WebGL/MediaPipe is unavailable."""
+    image = await read_image(photo)
+    return verify_face(image)

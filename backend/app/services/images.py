@@ -51,3 +51,37 @@ def polish(image: Image.Image, strength: float) -> bytes:
     output = BytesIO()
     adjusted.save(output, format="JPEG", quality=92, optimize=True)
     return output.getvalue()
+
+
+def verify_face(image: Image.Image) -> dict:
+    """Detect a frontal face on the server, without requiring browser WebGL."""
+    import cv2
+    import numpy as np
+
+    # Keep the analysis fast for oversized camera images. Normalize the returned
+    # bounding box to the *original* image via ratios in the scaled image.
+    gray = np.asarray(ImageOps.grayscale(image))
+    original_height, original_width = gray.shape
+    scale = min(1.0, 1000.0 / max(original_width, original_height))
+    if scale < 1:
+        gray = cv2.resize(gray, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+    gray = cv2.equalizeHist(gray)
+    classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    if classifier.empty():
+        raise HTTPException(503, "Face verification service is unavailable.")
+    # minNeighbors=5 filters common false positives on logos and objects.
+    faces = classifier.detectMultiScale(gray, scaleFactor=1.08, minNeighbors=5, minSize=(32, 32))
+    if len(faces) == 0:
+        return {"found": False, "face": None}
+    x, y, w, h = sorted(faces, key=lambda box: int(box[2]) * int(box[3]), reverse=True)[0]
+    height, width = gray.shape
+    # A usable portrait should have a reasonably large face. Small accidental
+    # Haar matches on logos/illustrations are not enough to authorize AI use.
+    if w / width < 0.14 or h / height < 0.14:
+        return {"found": False, "face": None}
+    return {"found": True, "face": {
+        "x": float((x + w / 2) / width),
+        "y": float((y + h / 2) / height),
+        "width": float(w / width),
+        "height": float(h / height),
+    }}

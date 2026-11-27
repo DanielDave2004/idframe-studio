@@ -4,7 +4,7 @@ import { ArrowRight, Check, Download, ImageIcon, LoaderCircle, Minus, Plus, Prin
 import { type Background, type Format, type PixelCrop } from '../types/photo'
 import { downloadBlob, exportPhoto, validateImage } from '../lib/imageProcessing'
 import { generateStudioPhoto, getGenerationQuota, type StudioModel, type OutfitChoice } from '../lib/cloudflarePhoto'
-import { enhancePhotoInPython } from '../lib/pythonPhoto'
+import { enhancePhotoInPython, verifyFaceInPython } from '../lib/pythonPhoto'
 import Turnstile from './Turnstile'
 import { downloadPrintSheet } from '../lib/printSheets'
 import { clearGenerated, loadPhoto, savePhoto } from '../lib/photoSession'
@@ -120,10 +120,15 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
       let detectedFace
       try {
         detectedFace = await detectPrimaryFace(imageUrl)
-      } catch (error) {
-        console.error('Face detection failed; AI generation is blocked:', error)
-        const detail = error instanceof Error ? error.message : String(error)
-        throw new Error(`Face verification could not start. ${detail} No AI generation was used.`)
+      } catch (browserError) {
+        console.warn('Browser face verification unavailable. Trying CPU verification on Python backend:', browserError)
+        setStatus('Checking the face with the Python backend…')
+        try {
+          detectedFace = await verifyFaceInPython(imageUrl)
+        } catch (serverError) {
+          const detail = serverError instanceof Error ? serverError.message : String(serverError)
+          throw new Error(`Face verification was unavailable in this browser and on the Python backend. ${detail} No AI generation was used.`)
+        }
       }
       if (!detectedFace) {
         throw new Error('No face detected. Please use a clear, front-facing photo with good lighting and no objects covering the face. AI generation was not started.')
@@ -143,7 +148,7 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
       }
 
       setStatus(usedPython ? 'Python enhancement done. Sending to Cloudflare…' : 'Sending your photo to Cloudflare…')
-      const blob = await generateStudioPhoto(preparationBlob ?? imageUrl, studioModel, turnstileToken, outfit)
+      const blob = await generateStudioPhoto(preparationBlob ?? imageUrl, studioModel, turnstileToken, outfit, detectedFace)
       const url = URL.createObjectURL(blob)
       if (generatedRef.current) URL.revokeObjectURL(generatedRef.current)
       generatedRef.current = url

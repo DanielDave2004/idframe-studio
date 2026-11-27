@@ -38,3 +38,20 @@ export async function enhancePhotoInPython(imageUrl: string, strength = 0.6): Pr
   if (!image.type.startsWith('image/')) throw new Error('Python returned an invalid image.')
   return image
 }
+
+
+export async function verifyFaceInPython(imageUrl: string): Promise<{ x: number; y: number; width: number; height: number } | null> {
+  const base = backend()
+  if (!base) throw new Error('The Python face verification service is not configured.')
+  const form = new FormData()
+  form.append('photo', await imageBlob(imageUrl), 'photo.jpg')
+  const response = await fetch(`${base}/api/verify-face`, { method: 'POST', body: form })
+  if (!response.ok) {
+    if (response.status === 404) throw new Error('The Python backend needs the new /api/verify-face endpoint deployed on Render.')
+    let explanation = `Python verification failed (HTTP ${response.status}).`
+    try { const result = await response.json() as {detail?: string}; if (result.detail) explanation = result.detail } catch { /* use default */ }
+    throw new Error(explanation)
+  }
+  const result = await response.json() as { found: boolean; face: { x: number; y: number; width: number; height: number } | null }
+  return result.found ? result.face : null
+}

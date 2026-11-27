@@ -1,4 +1,4 @@
-import { detectPrimaryFace } from './faceDetection'
+import { detectPrimaryFace, type DetectedFace } from './faceDetection'
 
 export type StudioModel = 'dev' | 'klein'
 export type OutfitChoice = 'male' | 'female'
@@ -14,7 +14,7 @@ async function imageUrlFor(input: PhotoInput): Promise<{ url: string; revoke: ()
 // Crop the identity reference around the detected face when possible. This helps
 // exclude foreground selfie arms and reduces the source pose bias. The original
 // face pixels remain the reference, but model output identity is not guaranteed.
-async function makeReference(input: PhotoInput): Promise<Blob> {
+async function makeReference(input: PhotoInput, verifiedFace?: DetectedFace): Promise<Blob> {
   const { url, revoke } = await imageUrlFor(input)
   try {
     const img = new Image()
@@ -24,13 +24,10 @@ async function makeReference(input: PhotoInput): Promise<Blob> {
     const height = img.naturalHeight
     // Never silently fall back to a center crop if the face check fails.
     // Validation also runs in PhotoEditor before any Python/Cloudflare request.
-    let face
-    try {
-      face = await detectPrimaryFace(url)
-    } catch (error) {
-      console.error('Unable to verify face in the AI reference:', error)
-      throw new Error('Face verification could not finish. Please refresh the page and try again.')
-    }
+    // Reuse the face validated on the original input. This avoids a second
+    // browser MediaPipe call that could fail again in Brave, and preserves the
+    // original source face coordinates after Python enhancement.
+    const face = verifiedFace ?? await detectPrimaryFace(url)
     if (!face) throw new Error('No face detected in the photo prepared for AI. Upload a clear portrait with one visible face.')
     let side: number
     let x: number
@@ -55,11 +52,11 @@ async function makeReference(input: PhotoInput): Promise<Blob> {
   }
 }
 
-export async function generateStudioPhoto(input: PhotoInput, model: StudioModel = 'klein', turnstileToken = '', outfit: OutfitChoice = 'male'): Promise<Blob> {
+export async function generateStudioPhoto(input: PhotoInput, model: StudioModel = 'klein', turnstileToken = '', outfit: OutfitChoice = 'male', verifiedFace?: DetectedFace): Promise<Blob> {
   const endpoint = import.meta.env.VITE_CLOUDFLARE_WORKER_URL?.trim().replace(/\/$/, '')
   if (!endpoint) throw new Error('Cloudflare is not connected. Set VITE_CLOUDFLARE_WORKER_URL in your .env.local file.')
   const form = new FormData()
-  form.append('photo', await makeReference(input), 'reference.jpg')
+  form.append('photo', await makeReference(input, verifiedFace), 'reference.jpg')
   form.append('outfit', outfit)
   form.append('model', model)
   form.append('turnstileToken', turnstileToken)

@@ -4,20 +4,25 @@ const MODELS = {
   klein: '@cf/black-forest-labs/flux-2-klein-4b',
 }
 const DEFAULT_MODEL = 'klein'
-// Strict output style. Client-provided outfit/background values are intentionally ignored.
+// Fixed studio portrait composition. Outfit is selected from a strict server-controlled allowlist.
 const FORMAL_PORTRAIT_PROMPT = `Edit input image 0 into a single photorealistic, front-facing formal studio ID portrait of the SAME person shown in the reference photo.
 
 IDENTITY: Use the uploaded image for the person's face and identity. Keep their recognizable facial features, age, skin tone, face shape, jaw, eyes, nose, mouth, ears, hairline and hairstyle as faithful as possible. Do not beautify, change ethnicity, replace the person or invent different facial features. Preserve natural realistic skin texture.
 
 RECOMPOSE POSE COMPLETELY: The person must be sitting or standing upright, facing directly forward toward the camera. Head straight and level, eyes looking into the lens. Torso squarely facing the camera. Both shoulders level, symmetrical, fully visible, and facing forward. Eliminate selfie perspective, tilted or rotated body, reaching or extended arm, hand close to camera, and any hands or objects in the frame. Do not carry over the original selfie pose or body orientation. Create a standard straight-on formal ID-photo composition.
 
-MANDATORY CLOTHING: A realistic, properly fitted plain BLACK business SUIT JACKET over a crisp WHITE formal dress shirt, with a centered solid BLACK NECKTIE and visible knot. Clearly show jacket lapels, shirt collar, tie, upper chest and both shoulders. No casual shirt, no T-shirt, no open collar, no blazer without a tie.
+MANDATORY CLOTHING: {OUTFIT_DESCRIPTION}
 
 PORTRAIT FRAMING: One person only. Centered head and upper torso, with modest space above the hair. Head occupies about 40% of the frame height, cropped at approximately mid-chest. Symmetrical 2-by-2-inch ID portrait aesthetic. Solid clean WHITE background, with no objects or scenery. Diffuse even soft frontal studio light without dramatic shadows. Natural neutral professional expression, closed mouth, no exaggerated smiling.
 
 OUTPUT: Realistic high-resolution photographic portrait, straight-on eye-level camera, sharp face, natural proportions. No raised arms, hands, tilted shoulders, selfies, accessories, text, logos, watermarks, frames, illustration, or composite-looking cutouts.
 
-Important: PRIORITIZE the specified black-suit-and-black-tie front-facing ID-photo format over maintaining the reference body's position or clothing. Use the reference for facial identity, not for posing.`
+Important: PRIORITIZE the specified formal outfit and straight-on ID-photo format over maintaining the reference body's position or clothing. Use the reference for facial identity, not for posing.`
+
+const OUTFITS = {
+  male: "A realistic, properly fitted plain BLACK business suit jacket over a crisp WHITE formal dress shirt, with a centered solid BLACK NECKTIE and visible knot. Show jacket lapels, shirt collar, tie and both shoulders. No casual clothing, no open collar, no missing tie.",
+  female: "A realistic, properly fitted plain BLACK tailored WOMEN'S blazer with clean lapels, over a crisp WHITE formal collared blouse, open at the neck WITHOUT any necktie, matching a classic women's professional ID portrait. Show both shoulders and upper chest. No jewelry, no revealing clothing, no casual shirt. Do not masculinize the subject or alter their facial identity.",
+}
 
 function cors(origin, env) {
   const allowed = origin === 'http://localhost:5173' || origin === 'http://127.0.0.1:5173' || origin === env.ALLOWED_ORIGIN
@@ -121,8 +126,10 @@ export default {
       const form = await request.formData()
       const photo = form.get('photo')
       const modelChoice = String(form.get('model') || DEFAULT_MODEL)
+      const outfit = String(form.get('outfit') || 'male')
       if (!(photo instanceof File) || !['image/jpeg','image/png'].includes(photo.type) || photo.size > 1_000_000 || !photo.size) return json('Please upload a JPG or PNG under 1 MB.',400,headers)
       if (!Object.hasOwn(MODELS, modelChoice)) return json('Invalid AI model.',400,headers)
+      if (!Object.hasOwn(OUTFITS, outfit)) return json('Invalid outfit selection.',400,headers)
       if (!await checkTurnstile(request, env, String(form.get('turnstileToken') || ''))) return json('Human verification required. Complete the Turnstile challenge and retry.',403,headers)
 
       // Count even failed requests as attempts to prevent repeated costly failures.
@@ -135,9 +142,8 @@ export default {
       if (!personal.allowed) return json('Daily limit reached: 10 generations per visitor. You can edit and download existing photos, or return tomorrow (UTC).',429,headers)
       visitorReserved = true
 
-      // The generation style is intentionally fixed on the server. Neither the
-      // browser nor arbitrary requests can change this outfit, pose or backdrop.
-      const prompt = FORMAL_PORTRAIT_PROMPT
+      // The caller can select only these two server-defined outfits.
+      const prompt = FORMAL_PORTRAIT_PROMPT.replace('{OUTFIT_DESCRIPTION}', OUTFITS[outfit])
       const input = new FormData()
       input.append('prompt', prompt)
       input.append('input_image_0', photo, 'photo.jpg')

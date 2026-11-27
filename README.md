@@ -1,16 +1,21 @@
-# IDFrame — React + Python FastAPI + Cloudflare Workers AI
+# IDFrame Studio | React + Render Python + Cloudflare Workers AI
 
-A complete three-service IDFrame project, with an AI photo Studio and printable PDF photo sheets.
+This version has **two browser routes** (`/homepage` and `/studiopage`), two studio tabs (Generate / Export), the light-first teal/cyan theme based on the IDFrame Studio SVG, and the existing logo + BETA header.
 
-## What each service does
+## Features
 
-- `frontend/`: React + Vite + TypeScript, responsive Studio, photo upload, crop, background tools, download and PDF export.
-- `backend/`: Python + FastAPI, file validation, image quality analysis and mild image enhancement. **Python does not generate formal clothing**. Frontend falls back to browser analysis when Python is offline.
-- `cloudflare-worker/`: Cloudflare Workers AI image editing with FLUX.2 Klein 4B and FLUX.2 Dev (availability depends on your Cloudflare account); 10 successful generations per visitor per UTC day, 24 daily attempts, and a studio-wide daily cap of 50 successful generations using a Durable Object.
+- **Generate:** Choose **Suit & tie** (black suit, white shirt, black tie) or **Women's blazer** (black blazer and white collared blouse, no tie). These are **outfit styles, not automatic gender detection**. The Worker uses a different fixed server-side prompt for each, to avoid untrusted arbitrary prompts. Generated facial identity may differ from the original.
+- **Align face** before generating: MediaPipe detects the face in the browser, changes the canvas framing, and the adjusted cropped image is sent into the subsequent Python -> Cloudflare AI workflow. This does not cost a Worker AI generation. Review and refine the crop manually as desired.
+- **Generate** attempts Python enhancement first, then Cloudflare FLUX.2 generation. If Python enhance fails, original/aligned input is sent directly to Cloudflare; the user is notified by the final result status. A successful image alone does **not** prove Python ran; inspect Render logs.
+- **Export:** after generating, click **Remove background with Python**. The backend uses `rembg[cpu]` and the lightweight `u2netp` model, returning a transparent PNG. Choose white, light gray or light blue for downloads. The background changer is unavailable until the Python cutout completes. No browser IMG.LY processing is used.
+- Manual crop/zoom, single PNG/JPG and one 8 × 11 inch PDF sheet with **4 copies of 2×2 plus 6 copies of 1×1**, black cut borders and IDFrame Studio header/footer remain.
+- Daily Worker limits: 10 successful generations per visitor, 50 for the entire studio, 24 attempts per visitor, resetting at UTC midnight.
 
-## Setup on Windows (three terminals)
+## Local development
 
-**1. React frontend**
+Open **three** CMD terminals. From the project root:
+
+Frontend:
 
 ```bat
 cd frontend
@@ -19,7 +24,7 @@ npm install
 npm run dev
 ```
 
-Open `frontend/.env.local` and set:
+In `frontend/.env.local` use:
 
 ```env
 VITE_CLOUDFLARE_WORKER_URL=http://localhost:8787
@@ -27,7 +32,7 @@ VITE_PYTHON_API_URL=http://localhost:8000
 VITE_TURNSTILE_SITE_KEY=
 ```
 
-**2. Python backend (Python 3.13 or 3.11)**
+Python 3.13 backend:
 
 ```bat
 cd backend
@@ -37,101 +42,42 @@ python -m pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Test at `http://localhost:8000/health`. The Python server is used for the **Enhance with Python** button under Studio > Adjust and for quality analysis. Professional attire generation still uses Cloudflare.
-
-**3. Cloudflare Worker**
+Worker:
 
 ```bat
 cd cloudflare-worker
 npm install
 copy .dev.vars.example .dev.vars
-npx wrangler login
 npx wrangler dev
 ```
 
-Edit `.dev.vars` and set a unique long random `RATE_LIMIT_SALT`. The Worker configuration includes the remote AI binding. `DEV_SKIP_TURNSTILE=true` is set only in the local `.dev.vars` file, never in the deployed Worker configuration. To check the Worker, use `http://localhost:8787/health` (the root URL does not have a webpage).
+Configure a long unique `RATE_LIMIT_SALT` in `.dev.vars` for local development. `DEV_SKIP_TURNSTILE=true` is permitted **only locally**. For deployed Workers, set real Turnstile keys and disable development bypass.
 
-The Worker currently allows `http://localhost:5173` during local development. It will use your Cloudflare Workers AI quota. If you have already exhausted your daily quota, the AI button will remain limited by Cloudflare even when everything else works.
+## Production deployment
 
-## Studio features
+1. **Render**: existing Python Web Service, root `backend`; build `pip install -r requirements.txt`; start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`; `PYTHON_VERSION=3.13.3`; `FRONTEND_ORIGINS=https://idframe-studio-web.pages.dev` (replace with your actual public Pages origin). **Redeploy Render** after pushing this version, because the new background removal endpoint and dependency are in the backend.
+2. **Worker**: `cloudflare-worker/wrangler.toml` uses the existing production Worker name `idframe-studio`, AI and Durable Object bindings, and `ALLOWED_ORIGIN=https://idframe-studio-web.pages.dev`; confirm the exact Pages origin. Set production Worker secrets `RATE_LIMIT_SALT` and `TURNSTILE_SECRET` with `npx wrangler secret put ...` if missing, then run `cd cloudflare-worker && npx wrangler deploy`. **Redeploy the Worker** after the change because it now handles `outfit` on `/api/generate`.
+3. **Cloudflare Pages**: connect repo with root `frontend`, `npm run build`, output `dist`. Configure `VITE_CLOUDFLARE_WORKER_URL=https://idframe-studio.idframe.workers.dev`, `VITE_PYTHON_API_URL=<actual Render URL>`, and `VITE_TURNSTILE_SITE_KEY=<public Turnstile Site Key>`. New GitHub pushes deploy Pages if automatic deployments are enabled.
+4. Turnstile widget's allowed hostname must match the Pages hostname, **not** the Worker hostname. The frontend URL must also match Render's `FRONTEND_ORIGINS` and Worker's `ALLOWED_ORIGIN`. Never put private Worker secrets in `VITE_` variables or GitHub.
 
-- Generate studio-style portraits using Cloudflare FLUX.2 Klein 4B or Dev
-- Outfit choices: business suit, smart business casual, or original
-- Background choices, crop, zoom, face centering, local background removal
-- Quality analysis (Python if reachable, otherwise browser fallback)
-- Non-generative **Enhance with Python** control under Adjust
-- Download single PNG/JPG and 4x6-inch PDF sheets: 4 copies at 2x2 inches, or 8 copies at 1x1 inch
-- Desktop Studio layout with independent settings-panel scrolling; mobile scrolls vertically
-- Original and last generated photo session restored on reload (browser IndexedDB)
+## Python background removal notes
 
-## Deploy publicly
+- `rembg[cpu]` uses ONNX Runtime and is much heavier than the existing Pillow enhancement. The `u2netp` model is compact and is lazy-loaded on the **first** request, which may download model weights. Requests are serialized to reduce peak memory. Render free plans may still fail or restart because of RAM/CPU limits. If this happens, the frontend shows an error and keeps the already-generated portrait; normal AI generation, crop and exports are unaffected. A larger Render instance or a dedicated segmentation service may be needed for reliable public use.
+- The Python `/api/remove-background` route is publicly accessible. Consider adding authentication/rate limits/WAF before broad public use, since CPU segmentation is costly. Uploaded images are processed in memory and not intentionally persisted.
+- Generated portraits cannot be guaranteed to satisfy government ID/passport rules. Confirm all printed dimensions on actual printouts at 100% scale. **8×11 is a custom size**; conventional US Letter / short bond paper is 8.5×11.
 
-1. Push this repository to GitHub, but **never** commit `.env.local`, `.dev.vars`, or API secrets.
-2. Deploy `frontend/` as Cloudflare Pages (root `frontend`, build `npm run build`, output `dist`). Set `VITE_CLOUDFLARE_WORKER_URL`, `VITE_PYTHON_API_URL`, and `VITE_TURNSTILE_SITE_KEY` in Pages build settings. These VITE variables are public client configuration; never put secrets there.
-3. Deploy `backend/` on Render from `backend/render.yaml` or create a Python web service with root `backend`, build `pip install -r requirements.txt`, start `uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set `FRONTEND_ORIGINS` to your actual Pages URL, not `*`. Free Render resources are limited and may sleep.
-4. Set `ALLOWED_ORIGIN` in `cloudflare-worker/wrangler.toml` to your exact Pages origin. Set `DEV_SKIP_TURNSTILE` to `false` for production. Create Cloudflare Turnstile keys, set frontend site key, then configure `TURNSTILE_SECRET` and `RATE_LIMIT_SALT` using `npx wrangler secret put ...`. Never expose these to React.
-5. Deploy the Worker with `cd cloudflare-worker && npx wrangler deploy`. The Durable Object binding and SQLite counter migration are included in `wrangler.toml`. Set the Pages `VITE_CLOUDFLARE_WORKER_URL` to your deployed Worker URL and redeploy the frontend.
-6. Test status, Turnstile, error handling, five-generation limit, and PDF print dimensions from the deployed frontend.
-
-## Security and limitations
-
-The Worker rate limit is IP-derived, not account-based; shared connections may share an allowance, while network changes can bypass it. The studio-wide cap helps protect Cloudflare quota. Cloudflare Turnstile must be enabled on any public site. The Python API validates upload type, bytes, and dimensions, but it is a publicly callable API and may need independent rate limiting or Cloudflare WAF rules when exposed online. Uploaded photo bytes are not intentionally stored server-side by Python.
-
-Cloudflare model availability and free Neuron quotas vary, and image-to-image results can alter facial features. AI-generated photos are **not guaranteed** suitable for government IDs. The background-removal package has licensing conditions; review before production use. Print PDFs should be printed at 100%/Actual Size.
-
-## Tests
+## Checks
 
 ```bat
-cd frontend
-npm run build
-npm run lint
-
-cd ..\backend
-python -m pytest tests
+cd backend
+python -m pytest -q tests
 
 cd ..\cloudflare-worker
 npm test
+
+cd ..\frontend
+npm install
+npm run build
 ```
 
-The backend's tests may need `pip install pytest httpx` if not included in your environment.
-
-## Windows shortcuts
-After installing dependencies, you can open `scripts/start-frontend.bat`, `scripts/start-backend.bat`, and `scripts/start-worker.bat` in separate terminals or Command Prompt windows. They run the same commands described above.
-
-## Daily usage indicator troubleshooting
-
-If the Studio shows **Daily usage unavailable** instead of a count, verify `frontend/.env.local` contains `VITE_CLOUDFLARE_WORKER_URL=http://localhost:8787`, then restart Vite. Check that `ALLOWED_ORIGIN` in the Worker matches the actual browser origin (for example, `http://localhost:5173`). The Studio now logs the underlying request error in DevTools and provides a refresh control instead of staying on `checking…` after an error.
-
-
-## Formal ID Portrait (fixed style, Cloudflare)
-
-This edition fixes the Cloudflare Worker generation prompt to **front-facing, centered, both shoulders square, black business suit, white dress shirt, black necktie, white background**. The old attire and backdrop dropdowns are removed from the Generate panel. The Worker ignores submitted outfit/background values, so the style remains fixed. You can still choose FLUX.2 Klein 4B or Dev, subject to availability on your Cloudflare account.
-
-The React client creates a face-centered **480×480 reference crop** before requesting AI generation to reduce foreground selfie hands and background distractions. For best results, choose a photograph with a clearly visible face; a frontal input is still preferable. Prompting and cropping **cannot guarantee** a front-facing result or exact identity preservation, especially from dramatically angled selfies. These images may not meet official ID photo rules.
-
-Your existing local config still belongs in `frontend/.env.local`:
-
-```env
-VITE_CLOUDFLARE_WORKER_URL=http://localhost:8787
-VITE_PYTHON_API_URL=http://localhost:8000
-```
-
-Keep your existing `cloudflare-worker/.dev.vars` secrets and `frontend/.env.local` when updating. Restart Wrangler and Vite after replacing code. Previously generated portraits may be restored from local browser storage; use **Return to original** before generating again.
-
-## Generation limits (updated)
-
-The Cloudflare Worker permits **10 successful generations per visitor per UTC day** with up to **24 attempts per visitor per day**, and a configurable **50 daily global generations** cap. In `cloudflare-worker/wrangler.toml`, set `GLOBAL_DAILY_LIMIT = "50"`. The limit is separate from Cloudflare Workers AI Neurons. A failed generation normally refunds generation reservations, but still consumes an attempt and may consume Cloudflare Neurons. Local changes require a Wrangler restart; production changes require a Worker redeploy. The frontend reads `/api/usage` and displays the current allowance without a hardcoded count.
-
-
-## Website routes
-
-IDFrame now exposes two browser routes:
-
-- `/homepage`: landing page, information and photo upload.
-- `/studiopage`: photo editor, AI generation, Python enhancement and exports. If no original photo is saved, it shows the upload control.
-
-The app uses the browser History API and stores the uploaded session locally; back/forward, deep links and refreshes work with the included `frontend/public/_redirects` Cloudflare Pages rewrites. The root `/` redirects within the SPA to `/homepage`. Build the frontend with `npm run build` and deploy `frontend/dist` to Cloudflare Pages. Both routes share the same production origin, so no additional Worker `ALLOWED_ORIGIN`, Render `FRONTEND_ORIGINS` or Turnstile hostnames are needed.
-
-## Branding and default theme
-
-The header and site favicon now use `frontend/public/idframe-studio-logo.svg`. The header reads **IDFrame Studio** with a **BETA** badge. New visitors start in light mode even when their OS is set to dark; visitors can switch themes and their preference is saved in browser local storage (`idframe-theme`).
+API health endpoints: Render `<your Render URL>/health`; Worker `https://idframe-studio.idframe.workers.dev/health`. Pages frontend lives at the Pages domain and does **not** have a `/health` API.

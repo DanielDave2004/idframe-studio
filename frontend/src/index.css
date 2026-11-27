@@ -120,3 +120,47 @@ html[data-theme="dark"] .site-redesign{--bg:#141a17;--card:#1c2420;--line:#35403
 .site-redesign .footer-mark{border:0;background:transparent;color:var(--text);padding:0}
 @media(max-width:900px){.site-redesign .header-inner{height:62px}.main-nav{top:62px}}
 @media(max-width:620px){.site-redesign .header-inner{height:58px}.main-nav{top:58px}.site-redesign .brand{font-size:17px;gap:5px}.site-redesign .brand-icon.brand-logo{width:30px;height:30px}.site-redesign .header-icon{width:30px;height:30px}}
+
+/* 2026 IDFrame Studio logo-derived palette. Light remains the first-visit default. */
+html:not([data-theme="dark"]){
+  --bg:#f2fafb;--card:#ffffff;--line:#cce7e9;--text:#082d33;
+  --muted:#53757a;--soft:#e8f6f7;--secondary:#305e65;
+  --dark-button:#05616a;--button-text:#ffffff;--drop:#f7fcfc;--overlay:#e1f0f1;
+  --brand-accent:#078b90;
+}
+html[data-theme="dark"]{
+  --bg:#011214;--card:#062327;--line:#205258;--text:#f2f9fa;
+  --muted:#94b9bf;--soft:#0b343a;--secondary:#c5e5e7;
+  --dark-button:#1fe6da;--button-text:#01272b;--drop:#041d21;--overlay:#011012;
+  --brand-accent:#1fe6da;
+}
+.site-redesign .site-header{background:var(--card);border-bottom-color:var(--line)}
+.site-redesign .studio-tabs button.active{border-bottom-color:var(--brand-accent);color:var(--brand-accent)}
+.site-redesign .header-caption .live-dot,.site-redesign .status-dot,.site-redesign .eyebrow-dot{background:var(--brand-accent)}
+.site-redesign .hero-copy h1 em,.site-redesign .section-intro h2 span,.site-redesign .feature-story h2 span{color:var(--brand-accent)}
+.site-redesign .hero-primary,.site-redesign .nav-cta{background:var(--dark-button);color:var(--button-text)}
+.site-redesign .feature-section{background:var(--soft);color:var(--text)}
+.site-redesign .feature-story>p,.site-redesign .feature-points p{color:var(--secondary)}
+.site-redesign .feature-visual{background:linear-gradient(145deg,#b4e1e2,#6eb7bb)}
+html[data-theme="dark"] .site-redesign .feature-visual{background:linear-gradient(145deg,#10444b,#082c34)}
+.site-redesign .bottom-cta{background:linear-gradient(125deg,#011214,#054e55);color:#f2f9fa}
+.site-redesign .bottom-cta .hero-primary{background:#1fe6da;color:#011214}
+.site-redesign .brand-beta{border-color:var(--line);color:var(--brand-accent)}
+.site-redesign .studio-crop-stage{background:#05191b!important}
+.site-redesign .primary-button{box-shadow:0 8px 20px rgba(5,119,124,.13)}
+.site-redesign input[type="range"]{accent-color:var(--brand-accent)}
+.outfit-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.outfit-choice{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:7px;padding:12px;background:var(--soft);border:1px solid var(--line);border-radius:10px;color:var(--text);min-width:0;cursor:pointer;min-height:88px}
+.outfit-choice.selected{background:var(--soft);border-color:var(--brand-accent);box-shadow:inset 0 0 0 1px var(--brand-accent)}
+.outfit-label{font-size:12px;font-weight:750;display:flex;align-items:center;gap:5px}
+.outfit-label svg{color:var(--brand-accent)}
+.outfit-choice small{font-size:10px;color:var(--muted);line-height:1.4}
+.align-face-button{width:100%;justify-content:center;min-height:41px}
+.background-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.background-choice{background:var(--card);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:8px 5px;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.background-choice.selected{border-color:var(--brand-accent);box-shadow:inset 0 0 0 1px var(--brand-accent)}
+.background-choice:disabled{opacity:.45;cursor:not-allowed}
+.background-swatch{display:block;width:100%;height:34px;border:1px solid #b6cbd0;border-radius:5px}
+@media(max-width:390px){.outfit-choice-grid{grid-template-columns:1fr}.outfit-choice{min-height:65px}}
+html[data-theme="dark"] .site-redesign .feature-section{background:var(--soft);color:var(--text)}
+html[data-theme="dark"] .site-redesign .feature-story>p,html[data-theme="dark"] .site-redesign .feature-points p{color:var(--secondary)}

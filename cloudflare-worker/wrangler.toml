@@ -1,4 +1,4 @@
-name = "idframe-photo-ai"
+name = "idframe-studio"
 main = "src/index.js"
 compatibility_date = "2026-11-01"
 
@@ -15,5 +15,5 @@ tag = "v1-sqlite-counters"
 new_sqlite_classes = ["GenerationCounter"]
 
 [vars]
-ALLOWED_ORIGIN = "https://your-idframe-site.pages.dev"
+ALLOWED_ORIGIN = "https://idframe-studio-web.pages.dev"
 GLOBAL_DAILY_LIMIT = "50"

@@ -31,3 +31,20 @@ def test_file_validation():
 def test_invalid_strength():
     response = client.post('/api/enhance', files={'photo': ('photo.jpg', make_image(), 'image/jpeg')}, data={'strength': '1.4'})
     assert response.status_code == 422
+
+def test_remove_background_endpoint(monkeypatch):
+    from app.api import routes
+    def fake_remove_background(image):
+        data = BytesIO()
+        image.convert('RGBA').save(data, format='PNG')
+        return data.getvalue()
+    monkeypatch.setattr(routes, 'remove_background', fake_remove_background)
+    response = client.post('/api/remove-background', files={'photo': ('generated.jpg', make_image((500, 500)), 'image/jpeg')})
+    assert response.status_code == 200
+    assert response.headers['content-type'] == 'image/png'
+    assert Image.open(BytesIO(response.content)).mode == 'RGBA'
+
+
+def test_remove_background_rejects_invalid_upload():
+    response = client.post('/api/remove-background', files={'photo': ('bad.txt', b'xxx', 'text/plain')})
+    assert response.status_code == 415

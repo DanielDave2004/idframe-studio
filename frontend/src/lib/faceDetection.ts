@@ -7,29 +7,68 @@ export type DetectedFace = {
   height: number
 }
 
-// These files are copied/downloaded at build time by scripts/prepare-face-assets.mjs.
-// Loading them from the website's own origin avoids Brave blocking third-party CDNs.
+// Try the website-hosted assets first. If a Pages deployment has not published
+// them yet, a matching-version CDN can rescue browsers that allow it. A failed
+// check always blocks generation, rather than silently allowing AI to invent a face.
 const ASSET_BASE = `${import.meta.env.BASE_URL}models/mediapipe/`
 const MODEL_URL = `${ASSET_BASE}blaze_face_short_range.tflite`
 const WASM_URL = `${ASSET_BASE}wasm`
+const REMOTE_MODEL = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite'
+const REMOTE_WASM = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.32/wasm'
+const BACKUP_WASM = 'https://unpkg.com/@mediapipe/tasks-vision@0.10.32/wasm'
+
 let detectorPromise: Promise<FaceDetector> | null = null
+
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+async function checkLocalAsset(url: string, wasm = false): Promise<void> {
+  const response = await fetch(url, { method: 'GET', cache: 'no-store' })
+  if (!response.ok) throw new Error(`HTTP ${response.status} for ${url}`)
+  const contentType = response.headers.get('content-type') || ''
+  if (contentType.includes('text/html')) throw new Error(`Received an HTML page instead of ${url.split('/').pop()}. Check Cloudflare Pages build output.`)
+  const length = Number(response.headers.get('content-length') || 0)
+  if (!wasm && length > 0 && length < 100_000) throw new Error('The published face model is too small or incomplete.')
+  if (wasm && length > 0 && length < 100_000) throw new Error('The published MediaPipe WebAssembly runtime is too small or incomplete.')
+}
+
+async function createDetector(wasmUrl: string, modelUrl: string): Promise<FaceDetector> {
+  const fileset = await FilesetResolver.forVisionTasks(wasmUrl)
+  return FaceDetector.createFromOptions(fileset, {
+    baseOptions: { modelAssetPath: modelUrl, delegate: 'CPU' },
+    runningMode: 'IMAGE',
+    minDetectionConfidence: 0.38,
+  })
+}
 
 async function getDetector(): Promise<FaceDetector> {
   if (!detectorPromise) {
     detectorPromise = (async () => {
-      try {
-        const vision = await FilesetResolver.forVisionTasks(WASM_URL)
-        return await FaceDetector.createFromOptions(vision, {
-          baseOptions: { modelAssetPath: MODEL_URL, delegate: 'CPU' },
-          runningMode: 'IMAGE',
-          minDetectionConfidence: 0.45,
-        })
-      } catch (error) {
-        console.error('Local face detector failed to initialize:', error)
-        throw new Error('Face detector could not load from this website. Check that the deployed /models/mediapipe/ files are available, then refresh and try again.', { cause: error })
+      const failures: string[] = []
+      const locations = [
+        { name: 'website-hosted', wasm: WASM_URL, model: MODEL_URL, local: true },
+        { name: 'jsDelivr fallback', wasm: REMOTE_WASM, model: REMOTE_MODEL, local: false },
+        { name: 'unpkg fallback', wasm: BACKUP_WASM, model: REMOTE_MODEL, local: false },
+      ]
+      for (const location of locations) {
+        try {
+          if (location.local) {
+            await Promise.all([
+              checkLocalAsset(location.model),
+              checkLocalAsset(`${location.wasm}/vision_wasm_internal.wasm`, true),
+              checkLocalAsset(`${location.wasm}/vision_wasm_internal.js`),
+            ])
+          }
+          return await createDetector(location.wasm, location.model)
+        } catch (error) {
+          console.warn(`MediaPipe face detector failed using ${location.name}:`, error)
+          failures.push(`${location.name}: ${message(error)}`)
+        }
       }
+      throw new Error(`Face verification is unavailable. ${failures.join(' | ')}`)
     })().catch((error: unknown) => {
-      detectorPromise = null // A later click can retry after a temporary network failure.
+      detectorPromise = null
       throw error
     })
   }
@@ -61,14 +100,12 @@ export async function detectPrimaryFace(imageUrl: string): Promise<DetectedFace 
   const direct = selectFace(detector.detect(image).detections, width, height)
   if (direct) return direct
 
-  // Retry on a resized image: improves detection for very large, very small,
-  // or unusual image encodings, without changing the uploaded photo itself.
   const canvas = document.createElement('canvas')
   const scale = Math.min(1, 1024 / Math.max(width, height))
   canvas.width = Math.max(1, Math.round(width * scale))
   canvas.height = Math.max(1, Math.round(height * scale))
   const context = canvas.getContext('2d')
-  if (!context) return null
+  if (!context) throw new Error('The browser could not open a canvas for face verification.')
   context.drawImage(image, 0, 0, canvas.width, canvas.height)
   return selectFace(detector.detect(canvas).detections, canvas.width, canvas.height)
 }

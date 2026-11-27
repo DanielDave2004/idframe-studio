@@ -122,7 +122,8 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
         detectedFace = await detectPrimaryFace(imageUrl)
       } catch (error) {
         console.error('Face detection failed; AI generation is blocked:', error)
-        throw new Error('Face verification could not start. Please refresh and retry. If this continues, check that the website deployed its local face-detection files. No AI generation was used.')
+        const detail = error instanceof Error ? error.message : String(error)
+        throw new Error(`Face verification could not start. ${detail} No AI generation was used.`)
       }
       if (!detectedFace) {
         throw new Error('No face detected. Please use a clear, front-facing photo with good lighting and no objects covering the face. AI generation was not started.')

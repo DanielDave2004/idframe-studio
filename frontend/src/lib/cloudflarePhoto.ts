@@ -22,21 +22,23 @@ async function makeReference(input: PhotoInput): Promise<Blob> {
     await img.decode()
     const width = img.naturalWidth
     const height = img.naturalHeight
-    let face = null
-    try { face = await detectPrimaryFace(url) } catch { /* optional face detection */ }
+    // Never silently fall back to a center crop if the face check fails.
+    // Validation also runs in PhotoEditor before any Python/Cloudflare request.
+    let face
+    try {
+      face = await detectPrimaryFace(url)
+    } catch (error) {
+      console.error('Unable to verify face in the AI reference:', error)
+      throw new Error('Face verification could not finish. Please refresh the page and try again.')
+    }
+    if (!face) throw new Error('No face detected in the photo prepared for AI. Upload a clear portrait with one visible face.')
     let side: number
     let x: number
     let y: number
-    if (face) {
-      const facePixels = Math.max(face.width * width, face.height * height)
-      side = Math.min(Math.min(width, height), Math.max(facePixels * 3.1, Math.min(width, height) * 0.46))
-      x = face.x * width - side * 0.5
-      y = face.y * height - side * 0.39
-    } else {
-      side = Math.min(width, height)
-      x = (width - side) / 2
-      y = (height - side) * 0.2
-    }
+    const facePixels = Math.max(face.width * width, face.height * height)
+    side = Math.min(Math.min(width, height), Math.max(facePixels * 3.1, Math.min(width, height) * 0.46))
+    x = face.x * width - side * 0.5
+    y = face.y * height - side * 0.39
     x = Math.min(width - side, Math.max(0, x))
     y = Math.min(height - side, Math.max(0, y))
     const canvas = document.createElement('canvas')

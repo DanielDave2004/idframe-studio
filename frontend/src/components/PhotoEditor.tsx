@@ -117,12 +117,15 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
 
       // Require at least one visible face in the uploaded image before running any AI generation.
       // This avoids wasting quota on logos, objects, or photos where no person is present.
+      let detectedFace
       try {
-        const detectedFace = await detectPrimaryFace(imageUrl)
-        if (!detectedFace) throw new Error('No face detected in the uploaded image. Please choose a clear photo with one visible face before generating a professional portrait.')
+        detectedFace = await detectPrimaryFace(imageUrl)
       } catch (error) {
-        if (error instanceof Error && error.message.startsWith('No face detected')) throw error
-        console.warn('Face detection check could not finish before generation:', error)
+        console.error('Face detection failed; AI generation is blocked:', error)
+        throw new Error('Face verification could not finish. Please check your internet connection, refresh the page, and try again. No AI generation was started.')
+      }
+      if (!detectedFace) {
+        throw new Error('No face detected. Please upload a clear photo of a real person with a visible face. Logos, illustrations, and objects cannot be used for portrait generation.')
       }
 
       setStatus('Preparing your photo with Python…')

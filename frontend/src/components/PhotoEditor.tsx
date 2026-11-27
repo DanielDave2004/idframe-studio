@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
 import { ArrowRight, Check, Download, ImageIcon, LoaderCircle, Minus, Plus, Printer, RotateCcw, ShieldCheck, Sparkles, Upload, Undo2 } from 'lucide-react'
-import { BACKGROUNDS, type Background, type Format, type PixelCrop } from '../types/photo'
+import { type Background, type Format, type PixelCrop } from '../types/photo'
 import { downloadBlob, exportPhoto } from '../lib/imageProcessing'
 import { generateStudioPhoto, getGenerationQuota, type StudioModel, type OutfitChoice } from '../lib/cloudflarePhoto'
 import { enhancePhotoInPython } from '../lib/pythonPhoto'

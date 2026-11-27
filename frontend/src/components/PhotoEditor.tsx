@@ -8,6 +8,7 @@ import { enhancePhotoInPython } from '../lib/pythonPhoto'
 import Turnstile from './Turnstile'
 import { downloadPrintSheet } from '../lib/printSheets'
 import { clearGenerated, loadPhoto, savePhoto } from '../lib/photoSession'
+import { detectPrimaryFace } from '../lib/faceDetection'
 
 type Props = { imageUrl: string; fileName: string; onNewPhoto: (file: File) => void; onError: (message: string) => void }
 function safeBaseName(fileName: string) {
@@ -110,9 +111,21 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
   async function handleCloudflareGenerate() {
     try {
       setCloudBusy(true)
-      setStatus('Preparing your photo with Python…')
+      setStatus('Checking the uploaded photo…')
       setNotice('')
       onError('')
+
+      // Require at least one visible face in the uploaded image before running any AI generation.
+      // This avoids wasting quota on logos, objects, or photos where no person is present.
+      try {
+        const detectedFace = await detectPrimaryFace(imageUrl)
+        if (!detectedFace) throw new Error('No face detected in the uploaded image. Please choose a clear photo with one visible face before generating a professional portrait.')
+      } catch (error) {
+        if (error instanceof Error && error.message.startsWith('No face detected')) throw error
+        console.warn('Face detection check could not finish before generation:', error)
+      }
+
+      setStatus('Preparing your photo with Python…')
 
       // The Cloudflare client detects the face internally and frames the reference.
       // The preview crop stays editable for exports, without a separate Align button.

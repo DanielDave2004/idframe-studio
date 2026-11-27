@@ -77,7 +77,7 @@ function App() {
   const studioActive = page === 'studiopage'
   return <div className={`site-shell site-redesign ${studioActive && photo ? 'editing-mode' : ''}`}>
     <header className="site-header"><div className="header-inner">
-      <a href="/homepage" className="brand" onClick={event=>{event.preventDefault();navigate('homepage')}} aria-label="IDFrame home"><span className="brand-icon brand-logo"><img src="/idframe-studio-logo.svg" alt="" width="40" height="40"/></span><span>ID<span className="brand-light">Frame</span> <span className="brand-light">Studio</span></span><span className="brand-beta">BETA</span></a>
+      <a href="/homepage" className="brand" onClick={event=>{event.preventDefault();navigate('homepage')}} aria-label="IDFrame home"><span className="brand-icon brand-logo"><img src="/idframe-icon.svg" alt="" width="40" height="40"/></span><span>ID<span className="brand-light">Frame</span> <span className="brand-light">Studio</span></span><span className="brand-beta">BETA</span></a>
       <nav className={`main-nav ${menuOpen?'nav-open':''}`} aria-label="Main navigation">
         <a href="/homepage#how-it-works" onClick={event=>{event.preventDefault();goToSection('how-it-works')}}>How it works</a><a href="/homepage#features" onClick={event=>{event.preventDefault();goToSection('features')}}>Features</a><a href="/homepage#faq" onClick={event=>{event.preventDefault();goToSection('faq')}}>FAQ</a>
       </nav>

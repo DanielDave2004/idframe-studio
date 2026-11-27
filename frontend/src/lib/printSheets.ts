@@ -16,7 +16,7 @@ function drawSlot(page: any, png: any, x: number, y: number, size: number) {
 
 export async function downloadPrintSheet(photo: Blob, originalFileName: string) {
   const pdf = await PDFDocument.create()
-  const page = pdf.addPage([8.5 * 72, 11 * 72])
+  const page = pdf.addPage([8 * 72, 11 * 72])
   const { width, height } = page.getSize()
   const png = await pdf.embedPng(await photo.arrayBuffer())
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
@@ -31,7 +31,7 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   page.drawRectangle({ x: 0, y: 0, width, height: FOOTER_HEIGHT, color: brandSoft })
   page.drawText('IDFrame Studio', { x: 36, y: height - 38, size: 24, font: fontBold, color: rgb(1, 1, 1) })
   page.drawText('Professional Photo Package', { x: 36, y: height - 54, size: 10, font: fontRegular, color: rgb(0.87, 0.97, 0.97) })
-  page.drawText('4 copies of 2x2 inches + 6 copies of 1x1 inch on one page', { x: width - 250, y: height - 37, size: 10, font: fontRegular, color: rgb(0.90, 0.98, 0.98) })
+  page.drawText('4 x 2x2 + 6 x 1x1 - 8x11 in', { x: width - 250, y: height - 37, size: 10, font: fontRegular, color: rgb(0.90, 0.98, 0.98) })
   page.drawText('IDFrame Studio - Print at actual size / 100% - Borders included for safe cutting', { x: 36, y: 17, size: 9, font: fontRegular, color: textDark })
 
   const contentTop = height - HEADER_HEIGHT - 22
@@ -78,7 +78,7 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   page.drawLine({ start: { x: 36, y: smallTitleY + 34 }, end: { x: width - 36, y: smallTitleY + 34 }, thickness: 1, color: line })
 
   pdf.setTitle('IDFrame Studio package image sheet')
-  pdf.setSubject('Single-page package with 4 copies of 2x2 inches and 6 copies of 1x1 inch.')
+  pdf.setSubject('Custom 8 x 11 inch paper; 4 copies of 2x2 and 6 copies of 1x1. Print at 100 percent.')
   const bytes = await pdf.save()
   const fileName = `idframe-studio-package-images-${safeBaseName(originalFileName)}.pdf`
   downloadBlob(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }), fileName)

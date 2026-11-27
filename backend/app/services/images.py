@@ -51,28 +51,3 @@ def polish(image: Image.Image, strength: float) -> bytes:
     output = BytesIO()
     adjusted.save(output, format="JPEG", quality=92, optimize=True)
     return output.getvalue()
-
-
-# Lazy-load the compact CPU-only u2netp segmentation model. Avoid loading large
-# models at startup and serialize requests to reduce peak RAM on small hosts.
-from functools import lru_cache
-from threading import Lock
-
-_segmentation_lock = Lock()
-
-@lru_cache(maxsize=1)
-def _background_session():
-    from rembg import new_session
-    return new_session("u2netp")
-
-def remove_background(image: Image.Image) -> bytes:
-    from rembg import remove
-    # Limit per-request memory. Export stays 600x600 after client compositing.
-    input_image = ImageOps.contain(image, (1024, 1024))
-    with _segmentation_lock:
-        output = remove(input_image, session=_background_session())
-    if not isinstance(output, Image.Image):
-        raise ValueError("Segmentation returned no image")
-    buffer = BytesIO()
-    output.convert("RGBA").save(buffer, format="PNG", optimize=True)
-    return buffer.getvalue()

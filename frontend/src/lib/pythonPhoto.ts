@@ -38,24 +38,3 @@ export async function enhancePhotoInPython(imageUrl: string, strength = 0.6): Pr
   if (!image.type.startsWith('image/')) throw new Error('Python returned an invalid image.')
   return image
 }
-
-
-/** Run background removal on Render, not inside the browser. */
-export async function removeBackgroundInPython(image: Blob): Promise<Blob> {
-  const base = backend()
-  if (!base) throw new Error('Python API URL is not configured for background removal.')
-  const form = new FormData()
-  form.append('photo', image, 'generated-portrait.png')
-  const response = await fetch(`${base}/api/remove-background`, { method: 'POST', body: form })
-  if (!response.ok) {
-    let message = `Python background removal failed (${response.status}).`
-    try {
-      const result = await response.json() as { detail?: string }
-      if (typeof result.detail === 'string') message = result.detail
-    } catch { /* fall back to HTTP message */ }
-    throw new Error(message)
-  }
-  const cutout = await response.blob()
-  if (!cutout.type.includes('png')) throw new Error('Python returned an invalid background removal result.')
-  return cutout
-}

@@ -14,7 +14,7 @@ async function imageUrlFor(input: PhotoInput): Promise<{ url: string; revoke: ()
 // Crop the identity reference around the detected face when possible. This helps
 // exclude foreground selfie arms and reduces the source pose bias. The original
 // face pixels remain the reference, but model output identity is not guaranteed.
-async function makeReference(input: PhotoInput, preAligned = false): Promise<Blob> {
+async function makeReference(input: PhotoInput): Promise<Blob> {
   const { url, revoke } = await imageUrlFor(input)
   try {
     const img = new Image()
@@ -23,9 +23,7 @@ async function makeReference(input: PhotoInput, preAligned = false): Promise<Blo
     const width = img.naturalWidth
     const height = img.naturalHeight
     let face = null
-    if (!preAligned) {
-      try { face = await detectPrimaryFace(url) } catch { /* optional face detection */ }
-    }
+    try { face = await detectPrimaryFace(url) } catch { /* optional face detection */ }
     let side: number
     let x: number
     let y: number
@@ -37,7 +35,7 @@ async function makeReference(input: PhotoInput, preAligned = false): Promise<Blo
     } else {
       side = Math.min(width, height)
       x = (width - side) / 2
-      y = preAligned ? (height - side) / 2 : (height - side) * 0.2
+      y = (height - side) * 0.2
     }
     x = Math.min(width - side, Math.max(0, x))
     y = Math.min(height - side, Math.max(0, y))
@@ -55,11 +53,11 @@ async function makeReference(input: PhotoInput, preAligned = false): Promise<Blo
   }
 }
 
-export async function generateStudioPhoto(input: PhotoInput, model: StudioModel = 'klein', turnstileToken = '', outfit: OutfitChoice = 'male', preAligned = false): Promise<Blob> {
+export async function generateStudioPhoto(input: PhotoInput, model: StudioModel = 'klein', turnstileToken = '', outfit: OutfitChoice = 'male'): Promise<Blob> {
   const endpoint = import.meta.env.VITE_CLOUDFLARE_WORKER_URL?.trim().replace(/\/$/, '')
   if (!endpoint) throw new Error('Cloudflare is not connected. Set VITE_CLOUDFLARE_WORKER_URL in your .env.local file.')
   const form = new FormData()
-  form.append('photo', await makeReference(input, preAligned), 'reference.jpg')
+  form.append('photo', await makeReference(input), 'reference.jpg')
   form.append('outfit', outfit)
   form.append('model', model)
   form.append('turnstileToken', turnstileToken)

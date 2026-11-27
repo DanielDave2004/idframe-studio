@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Cropper, { type Area, type Point } from 'react-easy-crop'
-import { ArrowRight, Check, Download, ImageIcon, LoaderCircle, Minus, Plus, Printer, RotateCcw, ShieldCheck, Sparkles, Upload, Undo2 } from 'lucide-react'
+import { ArrowRight, Check, Download, Eye, ImageIcon, LoaderCircle, Minus, Plus, Printer, RotateCcw, ShieldCheck, Sparkles, Upload, Undo2, X } from 'lucide-react'
 import { type Background, type Format, type PixelCrop } from '../types/photo'
 import { downloadBlob, exportPhoto, validateImage } from '../lib/imageProcessing'
 import { generateStudioPhoto, getGenerationQuota, type StudioModel, type OutfitChoice } from '../lib/cloudflarePhoto'
 import { enhancePhotoInPython, verifyFaceInPython } from '../lib/pythonPhoto'
 import Turnstile from './Turnstile'
-import { downloadPrintSheet } from '../lib/printSheets'
+import { createPrintSheet, downloadPrintSheet } from '../lib/printSheets'
 import { clearGenerated, loadPhoto, savePhoto } from '../lib/photoSession'
 import { detectPrimaryFace } from '../lib/faceDetection'
 
@@ -39,6 +39,10 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
   const [turnstileToken, setTurnstileToken] = useState('')
   const [turnstileReset, setTurnstileReset] = useState(0)
   const [pdfBusy, setPdfBusy] = useState(false)
+  const [modal, setModal] = useState<'image' | 'pdf' | null>(null)
+  const [modalPdfUrl, setModalPdfUrl] = useState<string | null>(null)
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null)
+  const [modalBusy, setModalBusy] = useState(false)
   const turnstileKey = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
   const [preview, setPreview] = useState<string | null>(null)
   const source = generatedUrl ?? imageUrl
@@ -107,6 +111,38 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
   }, [source, pixels?.x, pixels?.y, pixels?.width, pixels?.height, background, enhancement])
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
+
+  // Preview links are owned by the modal and revoked whenever the modal closes.
+  useEffect(() => () => { if (modalPdfUrl) URL.revokeObjectURL(modalPdfUrl) }, [modalPdfUrl])
+  useEffect(() => () => { if (modalImageUrl) URL.revokeObjectURL(modalImageUrl) }, [modalImageUrl])
+  useEffect(() => {
+    if (!modal) return
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') setModal(null) }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [modal])
+
+  async function openPreview(type: 'image' | 'pdf') {
+    if (!pixels) { onError('Your image crop is not ready yet.'); return }
+    try {
+      setModalBusy(true)
+      onError('')
+      if (type === 'image') {
+        const blob = await exportPhoto(source, pixels, background, format, enhancement)
+        setModalImageUrl(URL.createObjectURL(blob))
+      } else {
+        const cropped = await exportPhoto(source, pixels, background, 'png', enhancement)
+        const pdf = await createPrintSheet(cropped)
+        setModalPdfUrl(URL.createObjectURL(pdf))
+      }
+      setModal(type)
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Could not prepare the preview.')
+    } finally {
+      setModalBusy(false)
+    }
+  }
+
 
   async function handleCloudflareGenerate() {
     try {
@@ -193,7 +229,7 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
       onError('')
       const photo = await exportPhoto(source, pixels, background, 'png', enhancement)
       await downloadPrintSheet(photo, fileName)
-      setNotice('8 × 11 inch package PDF created. Print at Actual size / 100%; select a matching custom paper size.')
+      setNotice('Standard short bond paper (8.5 × 11 inch) PDF created. Print at Actual size / 100%.')
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Could not create the PDF.')
     } finally {
@@ -240,7 +276,7 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
         </div>
         <div className="studio-sidebar-scroll">
           {activeTab === 'generate' && <div className="studio-tab-content" role="tabpanel">
-            <div className="studio-panel-title"><h2>Formal ID portrait generation</h2><p>One click runs Python enhancement first, then Cloudflare generates your chosen formal outfit in a front-facing studio portrait.</p></div>
+            <div className="studio-panel-title"><h2>Formal Portrait Generation</h2><p>One click runs Python enhancement first, then Cloudflare generates your chosen formal outfit in a front-facing studio portrait.</p></div>
             <div className="studio-quota" role="status"><ShieldCheck size={17}/><span>{quota ? `${quota.remaining} generation${quota.remaining === 1 ? '' : 's'} left today (max ${quota.dailyLimit} per visitor)` : quotaLoading ? 'Daily usage: checking…' : quotaError ? `Daily usage unavailable: ${quotaError}` : 'Daily usage not loaded'}</span><button type="button" className="text-button" onClick={refreshQuota} disabled={quotaLoading} aria-label="Refresh daily usage" title="Refresh daily usage"><RotateCcw size={15} className={quotaLoading ? 'spinning' : ''}/></button></div>
             <label>Formal outfit</label>
             <div className="outfit-choice-grid" role="group" aria-label="Formal outfit selection">
@@ -262,19 +298,26 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
 
           </div>}
           {activeTab === 'export' && <div className="studio-tab-content" role="tabpanel">
-            <div className="studio-panel-title"><h2>Download & package</h2><p>Export a single edited image or one branded sheet with 4 copies of 2×2 and 6 copies of 1×1 on the same paper.</p></div>
+            <div className="studio-panel-title"><h2>Download & Package</h2><p>Export a single edited image or one branded sheet with 4 copies of 2×2 and 6 copies of 1×1 on the same paper.</p></div>
             <label htmlFor="studio-format">Single photo format</label><select id="studio-format" value={format} onChange={e => setFormat(e.target.value as Format)}><option value="png">PNG · 600 × 600</option><option value="jpeg">JPG · 600 × 600</option></select>
-            <button type="button" className="primary-button professional-action" onClick={handleDownload} disabled={!pixels || busy}>{busy ? <LoaderCircle className="spinning" size={16}/> : <Download size={16}/>} Download single photo</button>
+            <div className="export-action-row"><button type="button" className="outline-button export-preview-button" onClick={() => void openPreview('image')} disabled={!pixels || modalBusy}><Eye size={16}/> View Single Image</button><button type="button" className="primary-button" onClick={handleDownload} disabled={!pixels || busy}>{busy ? <LoaderCircle className="spinning" size={16}/> : <Download size={16}/>} Download single photo</button></div>
             <div className="studio-divider"/>
-            <div className="studio-panel-title"><h2>IDFrame Studio package PDF</h2><p>One 8 × 11 inch page, centered layout, black cutting borders, and a branded header and footer.</p></div>
-            <button type="button" className="print-option" disabled={!pixels || pdfBusy} onClick={handlePdf}><Printer size={19}/><span><strong>4 pcs 2 × 2 + 6 pcs 1 × 1</strong><small>Single PDF package with IDFrame Studio header and footer</small></span>{pdfBusy ? <LoaderCircle className="spinning" size={16}/> : <Download size={16}/>}</button>
-            <p className="help-text">Custom 8 × 11 inch page (not standard 8.5 × 11 Letter). Use matching paper or a printer that supports custom sizes, and print at Actual size / 100%.</p>
+            <div className="studio-panel-title"><h2>IDFrame Studio package PDF</h2><p>One standard short bond paper (8.5 × 11 inch) page, centered layout, black cutting borders, and a branded header and footer.</p></div>
+            <div className="pdf-export-row"><button type="button" className="outline-button export-preview-button" onClick={() => void openPreview('pdf')} disabled={!pixels || modalBusy}><Eye size={16}/> View PDF</button><button type="button" className="print-option" disabled={!pixels || pdfBusy} onClick={handlePdf}><Printer size={19}/><span><strong>4 pcs 2 × 2 + 6 pcs 1 × 1</strong><small>Download PDF package</small></span>{pdfBusy ? <LoaderCircle className="spinning" size={16}/> : <Download size={16}/>}</button></div>
+            <p className="help-text">Standard short bond paper (US Letter 8.5 × 11 inches). Print at Actual size / 100% for accurate 2×2 and 1×1 photo dimensions.</p>
           </div>}
           {status && <p className="ai-progress" role="status"><LoaderCircle className="spinning" size={15}/> {status}</p>}
           {notice && <p className="ai-notice" role="status">{notice}</p>}
         </div>
-        <div className="studio-sidebar-footer"><button type="button" className="outline-button" onClick={() => setActiveTab('export')}><Download size={16}/> Downloads & PDF</button><span>IDFrame Studio package exports</span></div>
+        <div className="studio-sidebar-footer"><span>IDFrame Studio package exports</span></div>
       </aside>
     </div>
+    {modal && <div className="studio-preview-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setModal(null) }}>
+      <div className="studio-preview-dialog" role="dialog" aria-modal="true" aria-label={modal === 'pdf' ? 'PDF package preview' : 'Single photo preview'}>
+        <div className="studio-preview-header"><div><strong>{modal === 'pdf' ? 'PDF Package Preview' : 'Single Image Preview'}</strong><span>{modal === 'pdf' ? 'Short bond paper · 8.5 × 11 in' : `600 × 600 · ${format.toUpperCase()}`}</span></div><button type="button" className="studio-preview-close" onClick={() => setModal(null)} aria-label="Close preview"><X size={20}/></button></div>
+        <div className="studio-preview-content">{modal === 'image' && modalImageUrl && <img src={modalImageUrl} alt="Preview of the single exported portrait"/>}{modal === 'pdf' && modalPdfUrl && <iframe title="Printable photo PDF preview" src={modalPdfUrl}/>}</div>
+        <div className="studio-preview-footer"><span>{modal === 'pdf' ? 'Print at 100% / Actual size' : 'This preview matches the selected export format'}</span><button type="button" className="primary-button" onClick={() => { setModal(null); if (modal === 'pdf') void handlePdf(); else void handleDownload() }}><Download size={16}/> Download {modal === 'pdf' ? 'PDF' : 'Image'}</button></div>
+      </div>
+    </div>}
   </div>
 }

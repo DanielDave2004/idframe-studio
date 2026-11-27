@@ -14,9 +14,9 @@ function drawSlot(page: any, png: any, x: number, y: number, size: number) {
   page.drawRectangle({ x, y, width: size, height: size, borderWidth: 0.75, borderColor: rgb(0, 0, 0) })
 }
 
-export async function downloadPrintSheet(photo: Blob, originalFileName: string) {
+export async function createPrintSheet(photo: Blob): Promise<Blob> {
   const pdf = await PDFDocument.create()
-  const page = pdf.addPage([8 * 72, 11 * 72])
+  const page = pdf.addPage([8.5 * 72, 11 * 72])
   const { width, height } = page.getSize()
   const png = await pdf.embedPng(await photo.arrayBuffer())
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
@@ -78,8 +78,12 @@ export async function downloadPrintSheet(photo: Blob, originalFileName: string) 
   page.drawLine({ start: { x: 36, y: smallTitleY + 34 }, end: { x: width - 36, y: smallTitleY + 34 }, thickness: 1, color: line })
 
   pdf.setTitle('IDFrame Studio package image sheet')
-  pdf.setSubject('Custom 8 x 11 inch paper; 4 copies of 2x2 and 6 copies of 1x1. Print at 100 percent.')
+  pdf.setSubject('US Letter 8.5 x 11 inch paper; 4 copies of 2x2 and 6 copies of 1x1. Print at 100 percent.')
   const bytes = await pdf.save()
-  const fileName = `idframe-studio-package-images-${safeBaseName(originalFileName)}.pdf`
-  downloadBlob(new Blob([new Uint8Array(bytes)], { type: 'application/pdf' }), fileName)
+  return new Blob([new Uint8Array(bytes)], { type: 'application/pdf' })
+}
+
+export async function downloadPrintSheet(photo: Blob, originalFileName: string) {
+  const pdf = await createPrintSheet(photo)
+  downloadBlob(pdf, `idframe-studio-package-images-${safeBaseName(originalFileName)}.pdf`)
 }

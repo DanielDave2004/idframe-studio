@@ -339,3 +339,23 @@ html[data-theme="dark"] .comparison-image.after{border-color:#17c9c7}
 .comparison-disclaimer { margin: 2px 0 0; text-align:center; font-size: 10px; line-height: 1.5; font-weight: 700; letter-spacing: .075em; color: #7fb7b9; }
 html:not([data-theme="dark"]) .comparison-disclaimer { color: #3c777b; }
 .new-photo-picker { display: flex; align-items: center; }
+
+/* Export preview actions and modal */
+.export-action-row,.pdf-export-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:9px;align-items:stretch}
+.export-action-row>.primary-button,.pdf-export-row>.print-option{width:100%;min-width:0;white-space:normal;line-height:1.35;min-height:46px}
+.export-preview-button{justify-content:center;white-space:normal;text-align:center;min-width:0;font-size:11px;line-height:1.35}
+.pdf-export-row{grid-template-columns:minmax(0,.65fr) minmax(0,1.35fr)}
+.studio-sidebar-footer{justify-content:flex-end}
+.studio-preview-backdrop{position:fixed;inset:0;background:rgba(0,19,23,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(4px)}
+.studio-preview-dialog{width:min(760px,100%);max-height:min(94dvh,940px);min-height:0;background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 30px 90px #0006;display:flex;flex-direction:column;overflow:hidden;color:var(--text)}
+.studio-preview-header,.studio-preview-footer{padding:14px 19px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.studio-preview-header{border-bottom:1px solid var(--line)}.studio-preview-header>div{display:flex;flex-direction:column;gap:4px}.studio-preview-header strong{font-size:15px}.studio-preview-header span,.studio-preview-footer>span{font-size:11px;color:var(--muted)}
+.studio-preview-close{width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--soft);color:var(--text);display:grid;place-items:center;cursor:pointer}
+.studio-preview-content{min-height:0;flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;background:var(--soft);padding:14px}
+.studio-preview-content>img{display:block;max-width:100%;max-height:65dvh;object-fit:contain;border-radius:5px;box-shadow:0 10px 30px #0002}
+.studio-preview-content>iframe{display:block;width:100%;height:min(70dvh,680px);min-height:360px;border:0;background:#fff;border-radius:5px}
+.studio-preview-footer{border-top:1px solid var(--line)}
+@media(max-width:620px){.site-redesign .brand-beta,.site-redesign .help-icon{display:inline-flex!important;align-items:center;justify-content:center}.site-redesign .header-caption{display:none}.site-redesign .brand{font-size:clamp(13px,3.75vw,18px);gap:4px;min-width:0;white-space:nowrap}.site-redesign .brand-icon.brand-logo{width:30px;height:30px;flex-shrink:0}.site-redesign .brand-beta{font-size:7px;padding:3px 4px;letter-spacing:.2px}.site-redesign .header-actions{gap:4px;flex-shrink:0}.site-redesign .header-icon{height:32px;width:32px}.studio-preview-footer{flex-direction:column;align-items:stretch}.studio-preview-footer .primary-button{width:100%}.studio-preview-content>iframe{height:64dvh;min-height:280px}.export-action-row,.pdf-export-row{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}}
+@media(max-width:380px){.site-redesign .brand-beta{display:inline-flex!important}.site-redesign .brand{font-size:13px;gap:3px}.site-redesign .brand-icon.brand-logo{width:26px;height:26px}.site-redesign .header-icon{height:29px;width:29px}}
+/* Remove the decorative circular rings in the Section 03 illustration */
+.site-redesign .feature-visual:after{content:none!important;display:none!important}

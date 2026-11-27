@@ -94,7 +94,22 @@ function App() {
             <div className="hero-actions"><button className="hero-primary" onClick={scrollToUpload}>Create your portrait <ArrowRight size={19}/></button><a className="hero-link" href="#how-it-works">See how it works <ArrowUpRight size={17}/></a></div>
             <div className="hero-micro"><span><Check size={15}/> No account required</span><span><Check size={15}/> Edit before downloading</span></div>
           </div>
-          <div className="hero-visual" aria-label="IDFrame studio preview illustration"><div className="visual-dot-grid"/><div className="visual-window"><div className="visual-toolbar"><span><span className="visual-orb"/> IDFRAME / PREVIEW</span><span>01 : 01 <span className="window-ellipsis">•••</span></span></div><div className="visual-art"><div className="portrait-halo"/><div className="silhouette-person"><div className="person-hair"/><div className="person-head"/><div className="person-neck"/><div className="person-jacket"/><div className="person-shirt"/><div className="person-tie"/></div><div className="frame-guides"><i/><i/><i/><i/></div></div><div className="visual-caption"><div><strong>Professional portrait</strong><span>Studio · Clean gray</span></div><span className="visual-check"><Check size={17}/></span></div></div><div className="floating-label"><span className="floating-sparkle"><Sparkles size={17}/></span><span>Made with AI<strong>Studio-ready look</strong></span></div><div className="visual-counter">PORTRAIT STUDIO</div><a className="visual-arrow-link" href="#start" aria-label="Start creating your portrait" onClick={event=>{event.preventDefault();scrollToUpload()}}><ArrowUpRight size={20}/></a></div>
+          <div className="hero-visual hero-comparison" aria-label="Example before-and-after professional portraits for male and female suit styles">
+            <div className="comparison-heading"><span className="comparison-kicker">IDFRAME / TRANSFORMATIONS</span><strong>From everyday to professional</strong></div>
+            <div className="comparison-rows">
+              <div className="comparison-pair" aria-label="Men's suit before and after example">
+                <div className="comparison-image"><img src="/example-male-before.webp" alt="Example before: person wearing a casual T-shirt" loading="eager"/><span className="comparison-tag">BEFORE</span></div>
+                <span className="comparison-arrow" aria-hidden="true"><ArrowRight size={20}/></span>
+                <div className="comparison-image after"><img src="/example-male-after.webp" alt="Example after: the same person wearing a black suit and necktie" loading="eager"/><span className="comparison-tag">AFTER</span></div>
+              </div>
+              <div className="comparison-pair" aria-label="Women's blazer before and after example">
+                <div className="comparison-image"><img src="/example-female-before.webp" alt="Example before: person wearing a casual cream top" loading="lazy"/><span className="comparison-tag">BEFORE</span></div>
+                <span className="comparison-arrow" aria-hidden="true"><ArrowRight size={20}/></span>
+                <div className="comparison-image after"><img src="/example-female-after.webp" alt="Example after: the same person wearing a black blazer and white blouse" loading="lazy"/><span className="comparison-tag">AFTER</span></div>
+              </div>
+            </div>
+            <div className="comparison-footer"><span>Male suit & tie · Female blazer</span><span>Illustrative examples</span></div>
+          </div>
         </section>
         <div className="trust-strip"><span>MADE FOR YOUR NEXT OPPORTUNITY</span><div><span>Resumes</span><i/> <span>LinkedIn</span><i/> <span>Portfolios</span><i/> <span>Professional profiles</span></div></div>
         <section id="start" className="studio-section"><div className="section-intro"><div className="section-label"><span className="section-index">01 /</span> GET STARTED</div><h2>A polished photo, <span>in a few clicks.</span></h2><p>No special equipment needed. Choose a photo you like and make it ready for your next opportunity.</p></div><PhotoUploader onUpload={onUpload} onError={setError}/></section>

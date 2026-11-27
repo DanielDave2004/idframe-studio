@@ -275,3 +275,23 @@ html[data-theme="dark"] .site-redesign .hero-visual{background:linear-gradient(1
 html[data-theme="dark"] .site-redesign .feature-visual{background:linear-gradient(145deg,#164c52,#09353b);border-color:#2a7479}
 @media(max-width:900px){.site-redesign .hero-visual{min-height:460px}.site-redesign .feature-visual{min-height:360px}}
 @media(max-width:560px){.site-redesign .hero-visual{min-height:400px}.visual-arrow-link,.feature-arrow-link{width:35px;height:35px}}
+
+/* Homepage examples: two pairs, four square portraits */
+.site-redesign .hero-comparison{display:flex;flex-direction:column;justify-content:center;gap:12px;min-height:0;padding:23px 22px;overflow:hidden;border-radius:22px}
+.comparison-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;color:#083b40}
+.comparison-heading strong{font-size:13px;letter-spacing:-.2px}
+.comparison-kicker{font-size:9px;letter-spacing:1.3px;font-weight:800;color:#168c91}
+.comparison-rows{display:grid;gap:13px;width:100%}
+.comparison-pair{display:grid;grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr);align-items:center;gap:7px}
+.comparison-image{position:relative;min-width:0;aspect-ratio:1/1;background:#e8f2f1;border:1px solid #bbd3d4;border-radius:12px;overflow:hidden;box-shadow:0 6px 16px #0a424012}
+.comparison-image img{display:block;width:100%;height:100%;object-fit:cover}
+.comparison-image.after{border-color:#17c9c7}
+.comparison-tag{position:absolute;bottom:6px;left:6px;background:#07272bcf;color:#f3ffff;border-radius:5px;padding:4px 6px;font-weight:800;letter-spacing:1px;font-size:8px;line-height:1}
+.comparison-image.after .comparison-tag{background:#08787c;color:white}
+.comparison-arrow{height:26px;width:26px;display:grid;place-items:center;border-radius:50%;color:#ecffff;background:#066f74;box-shadow:0 3px 10px #066f7429}
+.comparison-footer{display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:9px;font-weight:600;color:#467276}
+html[data-theme="dark"] .comparison-heading{color:#e4fafa}
+html[data-theme="dark"] .comparison-footer{color:#a2c5c7}
+html[data-theme="dark"] .comparison-image{border-color:#246063;background:#15292c}
+html[data-theme="dark"] .comparison-image.after{border-color:#17c9c7}
+@media(max-width:620px){.site-redesign .hero-comparison{min-height:0;padding:15px;gap:10px}.comparison-pair{grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:5px}.comparison-arrow{height:24px;width:24px}.comparison-footer{font-size:8px}}

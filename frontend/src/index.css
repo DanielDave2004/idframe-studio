@@ -295,3 +295,42 @@ html[data-theme="dark"] .comparison-footer{color:#a2c5c7}
 html[data-theme="dark"] .comparison-image{border-color:#246063;background:#15292c}
 html[data-theme="dark"] .comparison-image.after{border-color:#17c9c7}
 @media(max-width:620px){.site-redesign .hero-comparison{min-height:0;padding:15px;gap:10px}.comparison-pair{grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr);gap:5px}.comparison-arrow{height:24px;width:24px}.comparison-footer{font-size:8px}}
+
+
+/* Homepage before/after showcase: remove auxiliary captions */
+.comparison-heading { justify-content:flex-start; }
+
+/* Focused process carousel */
+.process-carousel{max-width:840px;margin-inline:auto;border:1px solid var(--line);border-radius:22px;padding:26px;background:var(--card);box-shadow:0 18px 55px rgba(3,42,44,.07)}
+.process-carousel-top{display:flex;justify-content:space-between;gap:12px;color:var(--secondary);font-size:10px;font-weight:750;letter-spacing:1.1px;margin-bottom:15px}
+.process-carousel-stage{position:relative;min-height:280px;overflow:hidden;border-radius:15px;background:linear-gradient(135deg,var(--soft),var(--card));touch-action:pan-y}
+.process-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:28px;opacity:0;visibility:hidden;transform:translateX(22px) scale(.98);transition:opacity .35s ease, transform .35s ease, visibility .35s}
+.process-slide.is-current{opacity:1;visibility:visible;transform:translateX(0) scale(1)}
+.process-slide-content{max-width:540px;text-align:center}
+.process-slide-num{font-weight:800;font-size:11px;letter-spacing:2px;color:var(--brand-accent);margin-bottom:10px}
+.process-slide-icon{width:58px;height:58px;display:grid;place-items:center;margin:0 auto 12px;border-radius:16px;background:color-mix(in srgb,var(--brand-accent) 13%,transparent);color:var(--brand-accent)}
+.process-slide h3{font-size:clamp(22px,3vw,29px);letter-spacing:-.8px;margin:0 0 10px;color:var(--text)}
+.process-slide p{font-size:13px;line-height:1.7;color:var(--secondary);margin:0}
+.process-carousel-controls{display:flex;align-items:center;justify-content:center;gap:22px;margin-top:16px}
+.process-nav-btn{height:40px;width:40px;border:1px solid var(--line);border-radius:11px;background:var(--soft);color:var(--text);display:grid;place-items:center;cursor:pointer;transition:transform .2s,background .2s}
+.process-nav-btn:hover:not(:disabled){background:var(--brand-accent);color:#04181b;transform:translateY(-2px)}
+.process-nav-btn:disabled{opacity:.34;cursor:not-allowed}
+.flip-arrow{transform:rotate(180deg)}
+.process-dots{display:flex;gap:8px;align-items:center}
+.process-dots button{background:var(--line);border:0;border-radius:999px;width:9px;height:9px;padding:0;cursor:pointer;transition:width .25s,background .25s}
+.process-dots button.active{width:30px;background:var(--brand-accent)}
+@media(max-width:620px){.process-carousel{padding:14px;border-radius:17px}.process-carousel-top span:last-child{display:none}.process-carousel-stage{min-height:250px}.process-slide{padding:18px}.process-slide p{font-size:12px}}
+
+/* Outfit preview: center collar and shoulders evenly */
+.site-redesign .outfit-image-choice>img{object-fit:contain;object-position:center center;background:#eef1f2;padding:0 5px;box-sizing:border-box}
+
+/* Animated cyan sweep shown only while a generation request is running */
+.portrait-scan-overlay{position:absolute;inset:0;z-index:18;pointer-events:none;overflow:hidden;background:rgba(0,30,35,.13);border:1px solid rgba(32,239,234,.45)}
+.portrait-scan-line{position:absolute;top:0;left:0;right:0;height:3px;background:#25f2e9;box-shadow:0 0 17px 4px #24e9dfbd;animation:idframe-portrait-scan 2.3s ease-in-out infinite alternate}
+.portrait-scan-text{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;white-space:nowrap;gap:8px;background:#03292fe3;color:#d9ffff;border:1px solid #2bd7d5a3;border-radius:999px;padding:8px 13px;font-size:10px;font-weight:800;letter-spacing:1px}
+@keyframes idframe-portrait-scan{from{top:0}to{top:calc(100% - 3px)}}
+@media(prefers-reduced-motion:reduce){.portrait-scan-line{animation:none;top:50%}.process-slide{transition:none}}
+
+/* Section 03: use a photographic example instead of a drawn character */
+.paper-image{background:#eef4f4;}
+.feature-real-portrait{display:block;width:100%;height:100%;object-fit:cover;object-position:center 32%}

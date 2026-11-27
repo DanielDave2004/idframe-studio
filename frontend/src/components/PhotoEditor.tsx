@@ -186,7 +186,7 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
     <div className="studio-layout">
       <section className="studio-canvas card" aria-label="Photo editor">
         <div className="card-heading studio-canvas-head"><div><h2>Canvas</h2><span className="subtle">Drag to reposition · scroll or drag the zoom slider</span></div><span className="pill"><span className="status-dot"/> Live preview</span></div>
-        <div className="crop-stage studio-crop-stage"><Cropper key={source} image={source} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} showGrid objectFit="contain"/></div>
+        <div className="crop-stage studio-crop-stage"><Cropper key={source} image={source} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onCropComplete={onCropComplete} onZoomChange={setZoom} showGrid objectFit="contain"/>{cloudBusy && <div className="portrait-scan-overlay" role="status" aria-label="Generating your professional portrait"><div className="portrait-scan-line"/><span className="portrait-scan-text"><Sparkles size={15}/> GENERATING PORTRAIT</span></div>}</div>
         <div className="studio-canvas-bottom">
           <div className="zoom-control"><div className="field-head"><span>Zoom</span><span className="mono-value">{Math.round(zoom * 100)}%</span></div><div className="zoom-row"><button className="icon-button" onClick={() => setZoom(v => Math.max(1, +(v - 0.1).toFixed(2)))} aria-label="Zoom out"><Minus size={16}/></button><input type="range" aria-label="Zoom" min="1" max="3" step="0.01" value={zoom} onChange={e => setZoom(Number(e.target.value))}/><button className="icon-button" onClick={() => setZoom(v => Math.min(3, +(v + 0.1).toFixed(2)))} aria-label="Zoom in"><Plus size={16}/></button></div></div>
           <div className="studio-small-preview"><div className="mini-label">EXPORT PREVIEW · 600 × 600</div><div className="mini-preview">{preview ? <img src={preview} alt="Current photo export preview"/> : <span>Preparing…</span>}</div></div>
@@ -206,11 +206,11 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
             <div className="outfit-choice-grid" role="group" aria-label="Formal outfit selection">
               <button type="button" className={`outfit-choice outfit-image-choice ${outfit === 'male' ? 'selected' : ''}`} aria-pressed={outfit === 'male'} aria-label="Select male suit and tie" disabled={cloudBusy} onClick={() => setOutfit('male')}>
                 <img src="/male-suit.webp" alt="Headless black suit, white shirt and black tie" loading="lazy" />
-                <span className="outfit-image-label">{outfit === 'male' && <Check size={15}/>} Male suit</span>
+                <span className="outfit-image-label">{outfit === 'male' && <Check size={15}/>} Male Suit</span>
               </button>
               <button type="button" className={`outfit-choice outfit-image-choice ${outfit === 'female' ? 'selected' : ''}`} aria-pressed={outfit === 'female'} aria-label="Select female blazer" disabled={cloudBusy} onClick={() => setOutfit('female')}>
                 <img src="/female-suit.webp" alt="Headless black blazer with white collared blouse" loading="lazy" />
-                <span className="outfit-image-label">{outfit === 'female' && <Check size={15}/>} Female blazer</span>
+                <span className="outfit-image-label">{outfit === 'female' && <Check size={15}/>} Female Blazer</span>
               </button>
             </div>
             <label htmlFor="studio-model">AI model</label><select id="studio-model" value={studioModel} onChange={e => setStudioModel(e.target.value as StudioModel)} disabled={cloudBusy}><option value="klein">FLUX.2 Klein 4B · economical</option><option value="dev">FLUX.2 Dev · higher detail, heavier quota</option></select>
@@ -223,7 +223,6 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
           </div>}
           {activeTab === 'export' && <div className="studio-tab-content" role="tabpanel">
             <div className="studio-panel-title"><h2>Download & package</h2><p>Export a single edited image or one branded sheet with 4 copies of 2×2 and 6 copies of 1×1 on the same paper.</p></div>
-            <div className="studio-export-preview">{preview ? <img src={preview} alt="Final portrait"/> : <span>Preparing final preview…</span>}</div>
             <label htmlFor="studio-format">Single photo format</label><select id="studio-format" value={format} onChange={e => setFormat(e.target.value as Format)}><option value="png">PNG · 600 × 600</option><option value="jpeg">JPG · 600 × 600</option></select>
             <button type="button" className="primary-button professional-action" onClick={handleDownload} disabled={!pixels || busy}>{busy ? <LoaderCircle className="spinning" size={16}/> : <Download size={16}/>} Download single photo</button>
             <div className="studio-divider"/>

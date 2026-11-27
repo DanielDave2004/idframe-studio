@@ -122,10 +122,10 @@ export default function PhotoEditor({ imageUrl, fileName, onNewPhoto, onError }:
         detectedFace = await detectPrimaryFace(imageUrl)
       } catch (error) {
         console.error('Face detection failed; AI generation is blocked:', error)
-        throw new Error('Face verification could not finish. Please check your internet connection, refresh the page, and try again. No AI generation was started.')
+        throw new Error('Face verification is unavailable right now. Please try again or disable Brave Shields / browser blocking for this website. The face detector needs to load its model files before generation can start. No AI generation was used.')
       }
       if (!detectedFace) {
-        throw new Error('No face detected. Please upload a clear photo of a real person with a visible face. Logos, illustrations, and objects cannot be used for portrait generation.')
+        throw new Error('No face detected. Please use a clear, front-facing photo with good lighting and no objects covering the face. AI generation was not started.')
       }
 
       setStatus('Preparing your photo with Python…')

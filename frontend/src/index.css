@@ -211,3 +211,17 @@ html[data-theme="dark"] .site-redesign .feature-visual{background:linear-gradien
 .site-redesign .modal-mark img{object-fit:contain}
 .site-redesign input[type="range"]{accent-color:var(--brand-accent)}
 .site-redesign .studio-crop-stage{background:#011214!important}
+
+/* Literal uploaded IDFrame logo, consistent across both themes */
+.site-redesign .brand-icon.brand-logo{width:43px;height:43px;overflow:visible;flex-shrink:0}
+.site-redesign .brand-logo img{width:43px;height:43px;object-fit:contain;border-radius:9px}
+.site-redesign .footer-mark{background:transparent;color:inherit;padding:0}
+.site-redesign .footer-mark img{object-fit:contain;border-radius:5px}
+/* Clickable headless outfit photo choices */
+.outfit-choice-grid{gap:12px}
+.outfit-choice.outfit-image-choice{overflow:hidden;position:relative;padding:0;gap:0;align-items:stretch;min-height:0;border-radius:12px;background:var(--card);transition:border-color .15s,transform .15s,box-shadow .15s}
+.outfit-image-choice:hover:not(:disabled){transform:translateY(-2px)}
+.outfit-image-choice>img{display:block;width:100%;height:151px;object-fit:cover;object-position:center 32%;background:#edf0f1}
+.outfit-image-label{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 6px;font-size:12px;font-weight:700;min-height:36px;color:var(--text)}
+.outfit-image-choice.selected .outfit-image-label{color:var(--brand-accent)}
+@media(max-width:620px){.site-redesign .brand-icon.brand-logo{width:33px;height:33px}.site-redesign .brand-logo img{width:33px;height:33px}.outfit-image-choice>img{height:124px}}

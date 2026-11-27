@@ -204,11 +204,13 @@ export default function PhotoEditor({ imageUrl, fileName, onReset, onError }: Pr
             <div className="studio-quota" role="status"><ShieldCheck size={17}/><span>{quota ? `${quota.remaining} generation${quota.remaining === 1 ? '' : 's'} left today (max ${quota.dailyLimit} per visitor)` : quotaLoading ? 'Daily usage: checking…' : quotaError ? `Daily usage unavailable: ${quotaError}` : 'Daily usage not loaded'}</span><button type="button" className="text-button" onClick={refreshQuota} disabled={quotaLoading} aria-label="Refresh daily usage" title="Refresh daily usage"><RotateCcw size={15} className={quotaLoading ? 'spinning' : ''}/></button></div>
             <label>Formal outfit</label>
             <div className="outfit-choice-grid" role="group" aria-label="Formal outfit selection">
-              <button type="button" className={`outfit-choice ${outfit === 'male' ? 'selected' : ''}`} aria-pressed={outfit === 'male'} disabled={cloudBusy} onClick={() => setOutfit('male')}>
-                <span className="outfit-label">{outfit === 'male' && <Check size={14}/>} Male suit & tie</span><small>Black jacket, white shirt, black necktie</small>
+              <button type="button" className={`outfit-choice outfit-image-choice ${outfit === 'male' ? 'selected' : ''}`} aria-pressed={outfit === 'male'} aria-label="Select male suit and tie" disabled={cloudBusy} onClick={() => setOutfit('male')}>
+                <img src="/male-suit.webp" alt="Headless black suit, white shirt and black tie" loading="lazy" />
+                <span className="outfit-image-label">{outfit === 'male' && <Check size={15}/>} Male suit</span>
               </button>
-              <button type="button" className={`outfit-choice ${outfit === 'female' ? 'selected' : ''}`} aria-pressed={outfit === 'female'} disabled={cloudBusy} onClick={() => setOutfit('female')}>
-                <span className="outfit-label">{outfit === 'female' && <Check size={14}/>} Female suit / blazer</span><small>Black blazer, white collared blouse, no tie</small>
+              <button type="button" className={`outfit-choice outfit-image-choice ${outfit === 'female' ? 'selected' : ''}`} aria-pressed={outfit === 'female'} aria-label="Select female blazer" disabled={cloudBusy} onClick={() => setOutfit('female')}>
+                <img src="/female-suit.webp" alt="Headless black blazer with white collared blouse" loading="lazy" />
+                <span className="outfit-image-label">{outfit === 'female' && <Check size={15}/>} Female blazer</span>
               </button>
             </div>
             <label htmlFor="studio-model">AI model</label><select id="studio-model" value={studioModel} onChange={e => setStudioModel(e.target.value as StudioModel)} disabled={cloudBusy}><option value="klein">FLUX.2 Klein 4B · economical</option><option value="dev">FLUX.2 Dev · higher detail, heavier quota</option></select>
